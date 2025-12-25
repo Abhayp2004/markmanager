@@ -179,8 +179,7 @@ export default function Auth() {
           </span>{' '}
           ·{' '}
           <a
-            href="https://x.com/abhxy03
-            target="_blank"
+            href="https://x.com/abhxy03"
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
