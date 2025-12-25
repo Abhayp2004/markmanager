@@ -104,6 +104,21 @@ export function Dashboard() {
     id: string,
     priority: "important" | "pinned" | "reference" | "normal"
   ) => {
+    // Limit pinned bookmarks to 3
+    if (priority === "pinned") {
+      const pinnedCount = bookmarks.filter((b) => b.priority === "pinned").length;
+      const isAlreadyPinned = bookmarks.find((b) => b.id === id)?.priority === "pinned";
+      
+      if (pinnedCount >= 3 && !isAlreadyPinned) {
+        toast({
+          title: "Pin limit reached",
+          description: "You can only pin up to 3 bookmarks. Unpin one first.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("bookmarks")
       .update({ priority } as any)
