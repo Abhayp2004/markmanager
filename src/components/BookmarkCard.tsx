@@ -6,7 +6,8 @@ import {
   Trash2, 
   FolderInput, 
   ExternalLink,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Sparkles
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -39,9 +40,10 @@ interface BookmarkCardProps {
   onDelete: (id: string) => void;
   onMove: (id: string, folderId: string | null) => void;
   onTagClick?: (tag: string) => void;
+  onRetag?: (bookmark: Bookmark) => void;
 }
 
-export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, onRetag }: BookmarkCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,6 +101,12 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick }
               <LinkIcon className="h-4 w-4 mr-2" />
               Copy link
             </DropdownMenuItem>
+            {onRetag && (
+              <DropdownMenuItem onClick={() => onRetag(bookmark)}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Re-analyze tags
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             
             {folders.length > 0 && (

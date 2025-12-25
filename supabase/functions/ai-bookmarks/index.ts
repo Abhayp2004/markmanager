@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, content, query, bookmarks } = await req.json();
+    const { action, content, query, bookmarks, tweetUrl } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -26,7 +26,31 @@ serve(async (req) => {
 
     if (action === 'analyze') {
       // Analyze tweet content and generate tags
-      console.log('Analyzing tweet content for tags:', content?.substring(0, 100));
+      let textToAnalyze = content;
+      
+      // If no content, try to fetch from oEmbed
+      if (!textToAnalyze && tweetUrl) {
+        console.log('No content provided, fetching oEmbed for:', tweetUrl);
+        try {
+          const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(tweetUrl)}&omit_script=true`;
+          const oembedResponse = await fetch(oembedUrl);
+          if (oembedResponse.ok) {
+            const oembedData = await oembedResponse.json();
+            // Extract text from HTML
+            textToAnalyze = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            console.log('Extracted text from oEmbed:', textToAnalyze?.substring(0, 100));
+          }
+        } catch (e) {
+          console.log('oEmbed fetch failed:', e);
+        }
+      }
+
+      // If still no content, analyze the URL itself
+      if (!textToAnalyze && tweetUrl) {
+        textToAnalyze = `Tweet from URL: ${tweetUrl}`;
+      }
+
+      console.log('Analyzing content for tags:', textToAnalyze?.substring(0, 100));
       
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -41,12 +65,14 @@ serve(async (req) => {
               role: "system",
               content: `You are a tweet categorization assistant. Analyze the tweet content and assign 1-3 relevant tags from this list: ${AVAILABLE_TAGS.join(', ')}.
               
+              Even if content is limited, make your best guess based on any available information like usernames, keywords, or context.
+              
               Respond ONLY with a JSON object in this exact format:
               {"tags": ["tag1", "tag2"], "summary": "brief one-sentence summary of the tweet"}`
             },
             {
               role: "user",
-              content: `Analyze this tweet and categorize it:\n\n${content}`
+              content: `Analyze this tweet and categorize it:\n\n${textToAnalyze || 'Unknown tweet content'}`
             }
           ],
         }),
@@ -69,7 +95,6 @@ serve(async (req) => {
           });
         }
         
-        // Return default tags on error
         return new Response(JSON.stringify({ tags: ['other'], summary: '' }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -80,7 +105,6 @@ serve(async (req) => {
       console.log('AI response:', assistantMessage);
 
       try {
-        // Parse JSON from response
         const jsonMatch = assistantMessage.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
@@ -104,7 +128,6 @@ serve(async (req) => {
       });
 
     } else if (action === 'semantic-search') {
-      // Semantic search across bookmarks
       console.log('Performing semantic search for:', query);
       
       if (!bookmarks || bookmarks.length === 0) {
