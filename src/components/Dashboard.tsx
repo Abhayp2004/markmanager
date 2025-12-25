@@ -208,7 +208,77 @@ export function Dashboard() {
       />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* HEADER OMITTED FOR BREVITY — unchanged */}
+        {/* Header */}
+        <header className="border-b border-border px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="shrink-0"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              <div className="flex items-center gap-2">
+                <Bookmark className="h-6 w-6 text-primary" />
+                <h1 className="text-xl font-bold">Bookmarks</h1>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* Search */}
+              <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search bookmarks..."
+                  className="pl-10 h-10 bg-secondary/50"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+              </div>
+
+              {/* Add Bookmark Button */}
+              <Button onClick={() => setIsAddModalOpen(true)} className="h-10 gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Bookmark</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Tags */}
+          {usedTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {selectedTag && (
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" /> Clear filter
+                </button>
+              )}
+              {usedTags.map((tag) => (
+                <TagBadge
+                  key={tag}
+                  tag={tag}
+                  active={selectedTag === tag}
+                  onClick={() => handleTagClick(tag)}
+                />
+              ))}
+            </div>
+          )}
+        </header>
 
         {/* Priority filter */}
         <div className="border-b border-border px-4 sm:px-6 py-2 flex gap-2 flex-wrap">
