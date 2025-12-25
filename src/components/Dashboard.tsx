@@ -157,6 +157,15 @@ export function Dashboard() {
     return () => clearTimeout(timer);
   }, [searchQuery, performSemanticSearch]);
 
+  const updatePriority = async (id: string, priority: string) => {
+  await supabase
+    .from('bookmarks')
+    .update({ priority })
+    .eq('id', id);
+  
+  fetchBookmarks(); // or local state update
+};
+
   const handleDeleteBookmark = async (id: string) => {
     const { error } = await supabase.from("bookmarks").delete().eq("id", id);
 
