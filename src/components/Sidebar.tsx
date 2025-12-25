@@ -238,12 +238,17 @@ export function Sidebar({
             </p>
           </div>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            onClick={signOut}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              signOut();
+            }}
+            className="h-10 w-10 text-muted-foreground hover:text-foreground active:bg-accent"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </div>
