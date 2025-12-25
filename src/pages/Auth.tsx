@@ -174,17 +174,17 @@ export default function Auth() {
         {/* 👇 Creator credit */}
         <div className="mt-6 text-center text-xs text-muted-foreground">
           Created by{' '}
-          <span className="font-medium text-foreground">
+          <span className="font-medium text-foreground" >
             Abhay Parekh
           </span>{' '}
           ·{' '}
           <a
-            href="https://x.com/abhayparekh"
+            href="https://x.com/abhxy03
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
-            @abhayparekh
+            
           </a>
         </div>
       </div>
