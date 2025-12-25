@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Sidebar } from '@/components/Sidebar';
-import { BookmarkCard } from '@/components/BookmarkCard';
-import { AddBookmarkModal } from '@/components/AddBookmarkModal';
-import { TagBadge } from '@/components/TagBadge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search, Bookmark, Loader2, Sparkles, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from "react";
+import { Sidebar } from "@/components/Sidebar";
+import { BookmarkCard } from "@/components/BookmarkCard";
+import { AddBookmarkModal } from "@/components/AddBookmarkModal";
+import { TagBadge } from "@/components/TagBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Bookmark, Loader2, Sparkles, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Folder {
   id: string;
@@ -28,9 +28,26 @@ interface BookmarkType {
 }
 
 const AVAILABLE_TAGS = [
-  'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics', 
-  'science', 'business', 'lifestyle', 'entertainment', 'education',
-  'health', 'art', 'music', 'gaming', 'travel', 'food','spiritual', 'motivation'
+  "tech",
+  "ai",
+  "crypto",
+  "sports",
+  "funny",
+  "news",
+  "politics",
+  "science",
+  "business",
+  "lifestyle",
+  "entertainment",
+  "education",
+  "health",
+  "art",
+  "music",
+  "gaming",
+  "travel",
+  "food",
+  "spiritual",
+  "motivation",
 ];
 
 export function Dashboard() {
@@ -40,7 +57,7 @@ export function Dashboard() {
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSemanticSearching, setIsSemanticSearching] = useState(false);
@@ -48,13 +65,10 @@ export function Dashboard() {
 
   const fetchFolders = async () => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from('folders')
-      .select('*')
-      .order('created_at', { ascending: true });
-    
+    const { data, error } = await supabase.from("folders").select("*").order("created_at", { ascending: true });
+
     if (error) {
-      console.error('Error fetching folders:', error);
+      console.error("Error fetching folders:", error);
     } else {
       setFolders(data || []);
     }
@@ -62,20 +76,17 @@ export function Dashboard() {
 
   const fetchBookmarks = async () => {
     if (!user) return;
-    
-    let query = supabase
-      .from('bookmarks')
-      .select('*')
-      .order('created_at', { ascending: false });
+
+    let query = supabase.from("bookmarks").select("*").order("created_at", { ascending: false });
 
     if (selectedFolder) {
-      query = query.eq('folder_id', selectedFolder);
+      query = query.eq("folder_id", selectedFolder);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching bookmarks:', error);
+      console.error("Error fetching bookmarks:", error);
     } else {
       setBookmarks(data || []);
     }
@@ -100,28 +111,28 @@ export function Dashboard() {
 
     setIsSemanticSearching(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-bookmarks', {
-        body: { 
-          action: 'semantic-search', 
+      const { data, error } = await supabase.functions.invoke("ai-bookmarks", {
+        body: {
+          action: "semantic-search",
           query: searchQuery,
-          bookmarks: bookmarks.map(b => ({
+          bookmarks: bookmarks.map((b) => ({
             id: b.id,
             author_name: b.author_name,
             tweet_url: b.tweet_url,
             tags: b.tags,
-            content: b.content
-          }))
-        }
+            content: b.content,
+          })),
+        },
       });
 
       if (error) throw error;
       setSemanticResults(data.results || []);
     } catch (error) {
-      console.error('Semantic search error:', error);
+      console.error("Semantic search error:", error);
       toast({
-        title: 'Search error',
-        description: 'AI search failed, showing text matches instead',
-        variant: 'destructive',
+        title: "Search error",
+        description: "AI search failed, showing text matches instead",
+        variant: "destructive",
       });
       setSemanticResults(null);
     } finally {
@@ -144,88 +155,85 @@ export function Dashboard() {
   }, [searchQuery, performSemanticSearch]);
 
   const handleDeleteBookmark = async (id: string) => {
-    const { error } = await supabase.from('bookmarks').delete().eq('id', id);
-    
+    const { error } = await supabase.from("bookmarks").delete().eq("id", id);
+
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete bookmark',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete bookmark",
+        variant: "destructive",
       });
     } else {
-      setBookmarks(prev => prev.filter(b => b.id !== id));
+      setBookmarks((prev) => prev.filter((b) => b.id !== id));
       toast({
-        title: 'Deleted',
-        description: 'Bookmark has been removed',
+        title: "Deleted",
+        description: "Bookmark has been removed",
       });
     }
   };
 
   const handleMoveBookmark = async (id: string, folderId: string | null) => {
-    const { error } = await supabase
-      .from('bookmarks')
-      .update({ folder_id: folderId })
-      .eq('id', id);
+    const { error } = await supabase.from("bookmarks").update({ folder_id: folderId }).eq("id", id);
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to move bookmark',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to move bookmark",
+        variant: "destructive",
       });
     } else {
       fetchBookmarks();
       toast({
-        title: 'Moved',
-        description: folderId ? 'Bookmark moved to folder' : 'Bookmark removed from folder',
+        title: "Moved",
+        description: folderId ? "Bookmark moved to folder" : "Bookmark removed from folder",
       });
     }
   };
 
   const handleRetagBookmark = async (bookmark: BookmarkType) => {
-    toast({ title: 'Analyzing...', description: 'AI is categorizing this bookmark' });
-    
+    toast({ title: "Analyzing...", description: "AI is categorizing this bookmark" });
+
     try {
-      const { data, error } = await supabase.functions.invoke('ai-bookmarks', {
-        body: { 
-          action: 'analyze', 
+      const { data, error } = await supabase.functions.invoke("ai-bookmarks", {
+        body: {
+          action: "analyze",
           content: bookmark.content,
-          tweetUrl: bookmark.tweet_url
-        }
+          tweetUrl: bookmark.tweet_url,
+        },
       });
 
       if (error) throw error;
 
-      const newTags = data.tags || ['other'];
-      
+      const newTags = data.tags || ["other"];
+
       await supabase
-        .from('bookmarks')
+        .from("bookmarks")
         .update({ tags: newTags, content: data.summary || bookmark.content })
-        .eq('id', bookmark.id);
+        .eq("id", bookmark.id);
 
       fetchBookmarks();
       toast({
-        title: 'Tagged',
-        description: `Updated tags: ${newTags.join(', ')}`,
+        title: "Tagged",
+        description: `Updated tags: ${newTags.join(", ")}`,
       });
     } catch (error) {
-      console.error('Retag error:', error);
+      console.error("Retag error:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to analyze bookmark',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to analyze bookmark",
+        variant: "destructive",
       });
     }
   };
 
   const handleRetagAll = async () => {
-    const untaggedBookmarks = bookmarks.filter(b => !b.tags || b.tags.length === 0);
+    const untaggedBookmarks = bookmarks.filter((b) => !b.tags || b.tags.length === 0);
     if (untaggedBookmarks.length === 0) {
-      toast({ title: 'All bookmarks are tagged' });
+      toast({ title: "All bookmarks are tagged" });
       return;
     }
 
-    toast({ title: 'Analyzing...', description: `Tagging ${untaggedBookmarks.length} bookmarks` });
+    toast({ title: "Analyzing...", description: `Tagging ${untaggedBookmarks.length} bookmarks` });
 
     for (const bookmark of untaggedBookmarks) {
       await handleRetagBookmark(bookmark);
@@ -234,29 +242,27 @@ export function Dashboard() {
 
   const handleUpdateNotes = async (id: string, notes: string) => {
     const { error } = await supabase
-      .from('bookmarks')
+      .from("bookmarks")
       .update({ notes: notes || null })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to save note',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
       });
     } else {
-      setBookmarks(prev => prev.map(b => 
-        b.id === id ? { ...b, notes: notes || null } : b
-      ));
+      setBookmarks((prev) => prev.map((b) => (b.id === id ? { ...b, notes: notes || null } : b)));
       toast({
-        title: 'Note saved',
-        description: 'Your note has been updated',
+        title: "Note saved",
+        description: "Your note has been updated",
       });
     }
   };
 
   const handleTagClick = (tag: string) => {
-    setSelectedTag(prev => prev === tag ? null : tag);
+    setSelectedTag((prev) => (prev === tag ? null : tag));
     setSemanticResults(null);
   };
 
@@ -266,20 +272,21 @@ export function Dashboard() {
 
     // Filter by tag
     if (selectedTag) {
-      filtered = filtered.filter(b => b.tags?.includes(selectedTag));
+      filtered = filtered.filter((b) => b.tags?.includes(selectedTag));
     }
 
     // Filter by semantic search results or text search
     if (searchQuery.trim()) {
       if (semanticResults !== null) {
-        filtered = filtered.filter(b => semanticResults.includes(b.id));
+        filtered = filtered.filter((b) => semanticResults.includes(b.id));
       } else {
         const search = searchQuery.toLowerCase();
-        filtered = filtered.filter(b =>
-          b.tweet_url.toLowerCase().includes(search) ||
-          b.author_name?.toLowerCase().includes(search) ||
-          b.tags?.some(t => t.toLowerCase().includes(search)) ||
-          b.content?.toLowerCase().includes(search)
+        filtered = filtered.filter(
+          (b) =>
+            b.tweet_url.toLowerCase().includes(search) ||
+            b.author_name?.toLowerCase().includes(search) ||
+            b.tags?.some((t) => t.toLowerCase().includes(search)) ||
+            b.content?.toLowerCase().includes(search),
         );
       }
     }
@@ -288,10 +295,10 @@ export function Dashboard() {
   };
 
   const filteredBookmarks = getFilteredBookmarks();
-  const currentFolder = folders.find(f => f.id === selectedFolder);
+  const currentFolder = folders.find((f) => f.id === selectedFolder);
 
   // Get unique tags from all bookmarks
-  const usedTags = [...new Set(bookmarks.flatMap(b => b.tags || []))];
+  const usedTags = [...new Set(bookmarks.flatMap((b) => b.tags || []))];
 
   return (
     <div className="flex h-screen bg-background">
@@ -307,10 +314,10 @@ export function Dashboard() {
         <header className="flex items-center justify-between border-b border-border px-6 h-16 shrink-0">
           <div>
             <h1 className="text-xl font-semibold text-foreground">
-              {currentFolder ? currentFolder.name : 'All Bookmarks'}
+              {currentFolder ? currentFolder.name : "All Bookmarks"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? 's' : ''}
+              {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? "s" : ""}
               {selectedTag && ` tagged "${selectedTag}"`}
             </p>
           </div>
@@ -331,7 +338,7 @@ export function Dashboard() {
               {searchQuery && (
                 <button
                   onClick={() => {
-                    setSearchQuery('');
+                    setSearchQuery("");
                     setSemanticResults(null);
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
@@ -340,7 +347,7 @@ export function Dashboard() {
                 </button>
               )}
             </div>
-            {bookmarks.some(b => !b.tags || b.tags.length === 0) && (
+            {bookmarks.some((b) => !b.tags || b.tags.length === 0) && (
               <Button variant="outline" onClick={handleRetagAll}>
                 <Sparkles className="h-4 w-4 mr-2" />
                 Tag All
@@ -358,21 +365,11 @@ export function Dashboard() {
           <div className="border-b border-border px-6 py-3 shrink-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground mr-2">Filter by tag:</span>
-              {usedTags.map(tag => (
-                <TagBadge
-                  key={tag}
-                  tag={tag}
-                  active={selectedTag === tag}
-                  onClick={() => handleTagClick(tag)}
-                />
+              {usedTags.map((tag) => (
+                <TagBadge key={tag} tag={tag} active={selectedTag === tag} onClick={() => handleTagClick(tag)} />
               ))}
               {selectedTag && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setSelectedTag(null)}
-                  className="h-6 text-xs"
-                >
+                <Button variant="ghost" size="sm" onClick={() => setSelectedTag(null)} className="h-6 text-xs">
                   Clear filter
                 </Button>
               )}
@@ -389,11 +386,7 @@ export function Dashboard() {
           ) : filteredBookmarks.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredBookmarks.map((bookmark, index) => (
-                <div 
-                  key={bookmark.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
+                <div key={bookmark.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                   <BookmarkCard
                     bookmark={bookmark}
                     folders={folders}
@@ -412,20 +405,15 @@ export function Dashboard() {
                 <Bookmark className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground">
-                {searchQuery || selectedTag ? 'No bookmarks found' : 'No bookmarks yet'}
+                {searchQuery || selectedTag ? "No bookmarks found" : "No bookmarks yet"}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-sm">
                 {searchQuery || selectedTag
-                  ? 'Try adjusting your search or filter'
-                  : 'Start by adding your first tweet bookmark using the button above'
-                }
+                  ? "Try adjusting your search or filter"
+                  : "Start by adding your first tweet bookmark using the button above"}
               </p>
               {!searchQuery && !selectedTag && (
-                <Button 
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="mt-4"
-                  variant="glow"
-                >
+                <Button onClick={() => setIsAddModalOpen(true)} className="mt-4" variant="glow">
                   <Plus className="h-4 w-4 mr-2" />
                   Add your first bookmark
                 </Button>
@@ -437,10 +425,10 @@ export function Dashboard() {
         {/* Footer */}
         <footer className="border-t border-border px-6 py-3 shrink-0">
           <p className="text-sm text-muted-foreground text-center">
-            Created by{' '}
-            <a 
-              href="https://x.com/abhayparekh" 
-              target="_blank" 
+            Created by{" "}
+            <a
+              href="https://x.com/abhxy03"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline font-medium"
             >
