@@ -184,7 +184,6 @@ export default function Auth() {
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
-            
           </a>
         </div>
       </div>
