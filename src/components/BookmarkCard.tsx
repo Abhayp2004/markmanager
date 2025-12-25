@@ -1,0 +1,182 @@
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  MoreHorizontal, 
+  Trash2, 
+  FolderInput, 
+  ExternalLink,
+  Link as LinkIcon
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+
+interface Bookmark {
+  id: string;
+  tweet_url: string;
+  embed_html: string | null;
+  author_name: string | null;
+  folder_id: string | null;
+  created_at: string;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+}
+
+interface BookmarkCardProps {
+  bookmark: Bookmark;
+  folders: Folder[];
+  onDelete: (id: string) => void;
+  onMove: (id: string, folderId: string | null) => void;
+}
+
+export function BookmarkCard({ bookmark, folders, onDelete, onMove }: BookmarkCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (bookmark.embed_html && containerRef.current) {
+      // Clear previous content
+      containerRef.current.innerHTML = bookmark.embed_html;
+      
+      // Load Twitter widgets script
+      const script = document.createElement('script');
+      script.src = 'https://platform.twitter.com/widgets.js';
+      script.async = true;
+      script.charset = 'utf-8';
+      document.body.appendChild(script);
+
+      return () => {
+        // Cleanup script
+        const existingScripts = document.querySelectorAll('script[src*="platform.twitter.com/widgets.js"]');
+        existingScripts.forEach(s => s.remove());
+      };
+    }
+  }, [bookmark.embed_html]);
+
+  return (
+    <div className={cn(
+      "group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300",
+      "hover:border-primary/30 hover:shadow-card"
+    )}>
+      {/* Actions menu */}
+      <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-8 w-8 bg-card/90 backdrop-blur-sm border border-border"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild>
+              <a 
+                href={bookmark.tweet_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open on X
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(bookmark.tweet_url)}
+            >
+              <LinkIcon className="h-4 w-4 mr-2" />
+              Copy link
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            
+            {/* Move to folder options */}
+            {folders.length > 0 && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                  Move to folder
+                </div>
+                {bookmark.folder_id && (
+                  <DropdownMenuItem onClick={() => onMove(bookmark.id, null)}>
+                    <FolderInput className="h-4 w-4 mr-2" />
+                    Remove from folder
+                  </DropdownMenuItem>
+                )}
+                {folders
+                  .filter(f => f.id !== bookmark.folder_id)
+                  .map(folder => (
+                    <DropdownMenuItem 
+                      key={folder.id}
+                      onClick={() => onMove(bookmark.id, folder.id)}
+                    >
+                      <FolderInput className="h-4 w-4 mr-2" />
+                      {folder.name}
+                    </DropdownMenuItem>
+                  ))
+                }
+                <DropdownMenuSeparator />
+              </>
+            )}
+            
+            <DropdownMenuItem 
+              onClick={() => onDelete(bookmark.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete bookmark
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Tweet embed or fallback */}
+      {bookmark.embed_html ? (
+        <div 
+          ref={containerRef}
+          className="min-h-[200px] p-4 [&_.twitter-tweet]:!my-0 [&_.twitter-tweet]:!mx-auto"
+        />
+      ) : (
+        <div className="p-4">
+          <div className="flex flex-col gap-3 rounded-lg bg-secondary/50 p-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <LinkIcon className="h-4 w-4" />
+              <span className="text-sm">Tweet preview unavailable</span>
+            </div>
+            <a 
+              href={bookmark.tweet_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline truncate"
+            >
+              {bookmark.tweet_url}
+            </a>
+            {bookmark.author_name && (
+              <p className="text-sm text-muted-foreground">
+                By {bookmark.author_name}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer with timestamp */}
+      <div className="border-t border-border px-4 py-2 bg-secondary/30">
+        <p className="text-xs text-muted-foreground">
+          Saved {new Date(bookmark.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })}
+        </p>
+      </div>
+    </div>
+  );
+}
