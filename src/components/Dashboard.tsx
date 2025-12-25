@@ -104,10 +104,20 @@ export function Dashboard() {
     id: string,
     priority: "important" | "pinned" | "reference" | "normal"
   ) => {
-    await supabase.from("bookmarks").update({ priority }).eq("id", id);
-    setBookmarks((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, priority } : b))
-    );
+    const { error } = await supabase
+      .from("bookmarks")
+      .update({ priority } as any)
+      .eq("id", id);
+    
+    if (!error) {
+      setBookmarks((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, priority } : b))
+      );
+      toast({
+        title: "Priority updated",
+        description: `Bookmark marked as ${priority}`,
+      });
+    }
   };
 
   const handleDeleteBookmark = async (id: string) => {
