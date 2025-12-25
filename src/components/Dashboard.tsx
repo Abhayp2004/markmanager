@@ -433,6 +433,21 @@ export function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <footer className="border-t border-border px-6 py-3 shrink-0">
+          <p className="text-sm text-muted-foreground text-center">
+            Created by{' '}
+            <a 
+              href="https://x.com/abhayparekh" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              Abhay Parekh
+            </a>
+          </p>
+        </footer>
       </main>
 
       <AddBookmarkModal
