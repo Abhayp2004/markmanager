@@ -227,7 +227,7 @@ export function Sidebar({
       </nav>
 
       {/* User section - Fixed at bottom with spacing */}
-      <div className="border-t border-border px-3 pt-3 pb-6 shrink-0 flex-shrink-0">
+      <div className="border-t border-border px-4 pt-4 pb-10 shrink-0 flex-shrink-0">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
             {user?.email?.charAt(0).toUpperCase()}
