@@ -35,7 +35,7 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast({
@@ -48,7 +48,7 @@ export default function Auth() {
 
     setIsSubmitting(true);
 
-    const { error } = isLogin 
+    const { error } = isLogin
       ? await signIn(email, password)
       : await signUp(email, password);
 
@@ -61,7 +61,7 @@ export default function Auth() {
       } else if (error.message.includes('Invalid login credentials')) {
         message = 'Invalid email or password. Please try again.';
       }
-      
+
       toast({
         title: 'Error',
         description: message,
@@ -104,16 +104,17 @@ export default function Auth() {
               {isLogin ? 'Welcome back' : 'Create account'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isLogin 
+              {isLogin
                 ? 'Sign in to access your bookmarks'
-                : 'Get started with your bookmark collection'
-              }
+                : 'Get started with your bookmark collection'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -126,7 +127,9 @@ export default function Auth() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Password</Label>
+              <Label htmlFor="password" className="text-foreground">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -138,9 +141,9 @@ export default function Auth() {
               />
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-11" 
+            <Button
+              type="submit"
+              className="w-full h-11"
               variant="glow"
               disabled={isSubmitting}
             >
@@ -161,12 +164,28 @@ export default function Auth() {
               onClick={() => setIsLogin(!isLogin)}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
-              {isLogin 
+              {isLogin
                 ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'
-              }
+                : 'Already have an account? Sign in'}
             </button>
           </div>
+        </div>
+
+        {/* 👇 Creator credit */}
+        <div className="mt-6 text-center text-xs text-muted-foreground">
+          Created by{' '}
+          <span className="font-medium text-foreground">
+            Abhay Parekh
+          </span>{' '}
+          ·{' '}
+          <a
+            href="https://x.com/abhayparekh"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-primary transition-colors"
+          >
+            @abhayparekh
+          </a>
         </div>
       </div>
     </div>
