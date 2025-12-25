@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
 import { 
   MoreHorizontal, 
@@ -7,7 +8,11 @@ import {
   FolderInput, 
   ExternalLink,
   Link as LinkIcon,
-  Sparkles
+  Sparkles,
+  StickyNote,
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,6 +32,7 @@ interface Bookmark {
   created_at: string;
   tags?: string[];
   content?: string | null;
+  notes?: string | null;
 }
 
 interface Folder {
@@ -41,10 +47,13 @@ interface BookmarkCardProps {
   onMove: (id: string, folderId: string | null) => void;
   onTagClick?: (tag: string) => void;
   onRetag?: (bookmark: Bookmark) => void;
+  onUpdateNotes?: (id: string, notes: string) => void;
 }
 
-export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, onRetag }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, onRetag, onUpdateNotes }: BookmarkCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(bookmark.notes || '');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +72,16 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
       };
     }
   }, [bookmark.embed_html]);
+
+  const handleSaveNotes = () => {
+    onUpdateNotes?.(bookmark.id, notesValue);
+    setIsEditingNotes(false);
+  };
+
+  const handleCancelNotes = () => {
+    setNotesValue(bookmark.notes || '');
+    setIsEditingNotes(false);
+  };
 
   const tags = bookmark.tags || [];
 
@@ -189,6 +208,51 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
             )}
           </div>
         </div>
+      )}
+
+      {/* Notes section */}
+      {(bookmark.notes || isEditingNotes) && (
+        <div className="border-t border-border px-4 py-3 bg-primary/5">
+          {isEditingNotes ? (
+            <div className="space-y-2">
+              <Textarea
+                value={notesValue}
+                onChange={(e) => setNotesValue(e.target.value)}
+                placeholder="Why did you save this? Add context..."
+                className="min-h-[60px] bg-background text-sm resize-none"
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" variant="ghost" onClick={handleCancelNotes}>
+                  <X className="h-3 w-3 mr-1" /> Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveNotes}>
+                  <Check className="h-3 w-3 mr-1" /> Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div 
+              className="flex items-start gap-2 cursor-pointer group/notes"
+              onClick={() => setIsEditingNotes(true)}
+            >
+              <StickyNote className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground flex-1">{bookmark.notes}</p>
+              <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/notes:opacity-100 transition-opacity" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add note button when no notes exist */}
+      {!bookmark.notes && !isEditingNotes && (
+        <button
+          onClick={() => setIsEditingNotes(true)}
+          className="w-full border-t border-border px-4 py-2 bg-secondary/20 text-xs text-muted-foreground hover:bg-secondary/40 transition-colors flex items-center gap-1.5 justify-center"
+        >
+          <StickyNote className="h-3 w-3" />
+          Add note
+        </button>
       )}
 
       {/* Footer with timestamp */}

@@ -24,6 +24,7 @@ interface BookmarkType {
   created_at: string;
   tags?: string[];
   content?: string | null;
+  notes?: string | null;
 }
 
 const AVAILABLE_TAGS = [
@@ -231,6 +232,29 @@ export function Dashboard() {
     }
   };
 
+  const handleUpdateNotes = async (id: string, notes: string) => {
+    const { error } = await supabase
+      .from('bookmarks')
+      .update({ notes: notes || null })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save note',
+        variant: 'destructive',
+      });
+    } else {
+      setBookmarks(prev => prev.map(b => 
+        b.id === id ? { ...b, notes: notes || null } : b
+      ));
+      toast({
+        title: 'Note saved',
+        description: 'Your note has been updated',
+      });
+    }
+  };
+
   const handleTagClick = (tag: string) => {
     setSelectedTag(prev => prev === tag ? null : tag);
     setSemanticResults(null);
@@ -377,6 +401,7 @@ export function Dashboard() {
                     onMove={handleMoveBookmark}
                     onTagClick={handleTagClick}
                     onRetag={handleRetagBookmark}
+                    onUpdateNotes={handleUpdateNotes}
                   />
                 </div>
               ))}
