@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
-import { 
-  MoreHorizontal, 
-  Trash2, 
-  FolderInput, 
+import {
+  MoreHorizontal,
+  Trash2,
+  FolderInput,
   ExternalLink,
   Link as LinkIcon,
   Sparkles,
@@ -50,7 +50,15 @@ interface BookmarkCardProps {
   onUpdateNotes?: (id: string, notes: string) => void;
 }
 
-export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, onRetag, onUpdateNotes }: BookmarkCardProps) {
+export function BookmarkCard({
+  bookmark,
+  folders,
+  onDelete,
+  onMove,
+  onTagClick,
+  onRetag,
+  onUpdateNotes,
+}: BookmarkCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(bookmark.notes || '');
@@ -59,7 +67,7 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
   useEffect(() => {
     if (bookmark.embed_html && containerRef.current) {
       containerRef.current.innerHTML = bookmark.embed_html;
-      
+
       const script = document.createElement('script');
       script.src = 'https://platform.twitter.com/widgets.js';
       script.async = true;
@@ -67,8 +75,10 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
       document.body.appendChild(script);
 
       return () => {
-        const existingScripts = document.querySelectorAll('script[src*="platform.twitter.com/widgets.js"]');
-        existingScripts.forEach(s => s.remove());
+        const existingScripts = document.querySelectorAll(
+          'script[src*="platform.twitter.com/widgets.js"]'
+        );
+        existingScripts.forEach((s) => s.remove());
       };
     }
   }, [bookmark.embed_html]);
@@ -86,27 +96,30 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
   const tags = bookmark.tags || [];
 
   return (
-    <div className={cn(
-      "group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300",
-      "hover:border-primary/30 hover:shadow-card"
-    )}>
-      {/* Actions menu */}
-      <div className="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div
+      className={cn(
+        'group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300',
+        'hover:border-primary/30 hover:shadow-card'
+      )}
+    >
+      {/* Action menu */}
+      <div className="absolute right-2 top-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="h-8 w-8 bg-card/90 backdrop-blur-sm border border-border"
+            <Button
+              variant="secondary"
+              size="icon"
+              className="h-10 w-10 sm:h-8 sm:w-8 bg-card/90 backdrop-blur-sm border border-border"
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
-              <a 
-                href={bookmark.tweet_url} 
-                target="_blank" 
+              <a
+                href={bookmark.tweet_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
@@ -114,48 +127,55 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
                 Open on X
               </a>
             </DropdownMenuItem>
+
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(bookmark.tweet_url)}
             >
               <LinkIcon className="h-4 w-4 mr-2" />
               Copy link
             </DropdownMenuItem>
+
             {onRetag && (
               <DropdownMenuItem onClick={() => onRetag(bookmark)}>
                 <Sparkles className="h-4 w-4 mr-2" />
                 Re-analyze tags
               </DropdownMenuItem>
             )}
+
             <DropdownMenuSeparator />
-            
+
             {folders.length > 0 && (
               <>
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   Move to folder
                 </div>
+
                 {bookmark.folder_id && (
-                  <DropdownMenuItem onClick={() => onMove(bookmark.id, null)}>
+                  <DropdownMenuItem
+                    onClick={() => onMove(bookmark.id, null)}
+                  >
                     <FolderInput className="h-4 w-4 mr-2" />
                     Remove from folder
                   </DropdownMenuItem>
                 )}
+
                 {folders
-                  .filter(f => f.id !== bookmark.folder_id)
-                  .map(folder => (
-                    <DropdownMenuItem 
+                  .filter((f) => f.id !== bookmark.folder_id)
+                  .map((folder) => (
+                    <DropdownMenuItem
                       key={folder.id}
                       onClick={() => onMove(bookmark.id, folder.id)}
                     >
                       <FolderInput className="h-4 w-4 mr-2" />
                       {folder.name}
                     </DropdownMenuItem>
-                  ))
-                }
+                  ))}
+
                 <DropdownMenuSeparator />
               </>
             )}
-            
-            <DropdownMenuItem 
+
+            <DropdownMenuItem
               onClick={() => onDelete(bookmark.id)}
               className="text-destructive focus:text-destructive"
             >
@@ -170,9 +190,9 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 px-4 pt-3">
           {tags.map((tag) => (
-            <TagBadge 
-              key={tag} 
-              tag={tag} 
+            <TagBadge
+              key={tag}
+              tag={tag}
               size="sm"
               onClick={() => onTagClick?.(tag)}
             />
@@ -180,11 +200,11 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
         </div>
       )}
 
-      {/* Tweet embed or fallback */}
+      {/* Tweet embed / fallback */}
       {bookmark.embed_html ? (
-        <div 
+        <div
           ref={containerRef}
-          className="min-h-[200px] p-4 [&_.twitter-tweet]:!my-0 [&_.twitter-tweet]:!mx-auto"
+          className="min-h-[200px] p-3 sm:p-4 [&_.twitter-tweet]:!my-0 [&_.twitter-tweet]:!mx-auto"
         />
       ) : (
         <div className="p-4">
@@ -193,9 +213,9 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
               <LinkIcon className="h-4 w-4" />
               <span className="text-sm">Tweet preview unavailable</span>
             </div>
-            <a 
-              href={bookmark.tweet_url} 
-              target="_blank" 
+            <a
+              href={bookmark.tweet_url}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-primary hover:underline truncate"
             >
@@ -210,7 +230,7 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
         </div>
       )}
 
-      {/* Notes section */}
+      {/* Notes */}
       {(bookmark.notes || isEditingNotes) && (
         <div className="border-t border-border px-4 py-3 bg-primary/5">
           {isEditingNotes ? (
@@ -222,7 +242,7 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
                 className="min-h-[60px] bg-background text-sm resize-none"
                 autoFocus
               />
-              <div className="flex gap-2 justify-end">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end">
                 <Button size="sm" variant="ghost" onClick={handleCancelNotes}>
                   <X className="h-3 w-3 mr-1" /> Cancel
                 </Button>
@@ -232,36 +252,39 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick, 
               </div>
             </div>
           ) : (
-            <div 
+            <div
               className="flex items-start gap-2 cursor-pointer group/notes"
               onClick={() => setIsEditingNotes(true)}
             >
               <StickyNote className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-muted-foreground flex-1">{bookmark.notes}</p>
+              <p className="text-sm text-muted-foreground flex-1">
+                {bookmark.notes}
+              </p>
               <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/notes:opacity-100 transition-opacity" />
             </div>
           )}
         </div>
       )}
 
-      {/* Add note button when no notes exist */}
+      {/* Add note */}
       {!bookmark.notes && !isEditingNotes && (
         <button
           onClick={() => setIsEditingNotes(true)}
-          className="w-full border-t border-border px-4 py-2 bg-secondary/20 text-xs text-muted-foreground hover:bg-secondary/40 transition-colors flex items-center gap-1.5 justify-center"
+          className="w-full border-t border-border px-4 py-3 bg-secondary/20 text-sm text-muted-foreground hover:bg-secondary/40 transition-colors flex items-center gap-1.5 justify-center"
         >
           <StickyNote className="h-3 w-3" />
           Add note
         </button>
       )}
 
-      {/* Footer with timestamp */}
+      {/* Footer */}
       <div className="border-t border-border px-4 py-2 bg-secondary/30">
         <p className="text-xs text-muted-foreground">
-          Saved {new Date(bookmark.created_at).toLocaleDateString('en-US', {
+          Saved{' '}
+          {new Date(bookmark.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            year: 'numeric'
+            year: 'numeric',
           })}
         </p>
       </div>
