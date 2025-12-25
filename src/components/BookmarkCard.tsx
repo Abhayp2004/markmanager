@@ -33,6 +33,7 @@ interface Bookmark {
   tags?: string[];
   content?: string | null;
   notes?: string | null;
+  priority?: 'normal' | 'important' | 'pinned' | 'reference';
 }
 
 interface Folder {
