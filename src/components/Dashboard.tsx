@@ -86,7 +86,7 @@ export function Dashboard() {
     }
 
     const { data } = await query;
-    setBookmarks(data || []);
+    setBookmarks((data as BookmarkType[]) || []);
     setIsLoading(false);
   };
 

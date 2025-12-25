@@ -24,6 +24,7 @@ export type Database = {
           folder_id: string | null
           id: string
           notes: string | null
+          priority: string | null
           tags: string[] | null
           tweet_url: string
           updated_at: string
@@ -38,6 +39,7 @@ export type Database = {
           folder_id?: string | null
           id?: string
           notes?: string | null
+          priority?: string | null
           tags?: string[] | null
           tweet_url: string
           updated_at?: string
@@ -52,6 +54,7 @@ export type Database = {
           folder_id?: string | null
           id?: string
           notes?: string | null
+          priority?: string | null
           tags?: string[] | null
           tweet_url?: string
           updated_at?: string
