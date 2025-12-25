@@ -44,6 +44,7 @@ export function Sidebar({
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSelectFolder = (folderId: string | null) => {
     onSelectFolder(folderId);
@@ -77,6 +78,34 @@ export function Sidebar({
         title: 'Folder created',
         description: `"${newFolderName}" has been created`,
       });
+    }
+  };
+
+  const handleSignOut = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    // Helps debug "tap doesn't trigger" issues on some mobile browsers.
+    // eslint-disable-next-line no-console
+    console.log('[auth] signOut pressed');
+
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      if (isMobile && onClose) onClose();
+
+      // Force navigation to ensure UI updates even if the auth event is delayed.
+      window.location.assign('/auth');
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -241,14 +270,17 @@ export function Sidebar({
             type="button"
             variant="ghost"
             size="icon"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              signOut();
-            }}
+            onClick={handleSignOut}
+            onPointerUp={handleSignOut}
+            disabled={isSigningOut}
+            style={{ touchAction: 'manipulation' }}
             className="h-10 w-10 text-muted-foreground hover:text-foreground active:bg-accent"
           >
-            <LogOut className="h-5 w-5" />
+            {isSigningOut ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <LogOut className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
