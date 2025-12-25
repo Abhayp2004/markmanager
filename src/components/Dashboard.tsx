@@ -5,10 +5,11 @@ import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { TagBadge } from "@/components/TagBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Bookmark, Loader2, Sparkles, X } from "lucide-react";
+import { Plus, Search, Bookmark, Loader2, Sparkles, X, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Folder {
   id: string;
@@ -53,6 +54,7 @@ const AVAILABLE_TAGS = [
 export function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
@@ -62,6 +64,7 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSemanticSearching, setIsSemanticSearching] = useState(false);
   const [semanticResults, setSemanticResults] = useState<string[] | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchFolders = async () => {
     if (!user) return;
@@ -307,23 +310,37 @@ export function Dashboard() {
         selectedFolder={selectedFolder}
         onSelectFolder={setSelectedFolder}
         onFolderCreated={fetchFolders}
+        isOpen={isMobile ? isSidebarOpen : true}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="flex-1 overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-border px-6 h-16 shrink-0">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              {currentFolder ? currentFolder.name : "All Bookmarks"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? "s" : ""}
-              {selectedTag && ` tagged "${selectedTag}"`}
-            </p>
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-0 sm:h-16 shrink-0 gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSidebarOpen(true)}
+                className="h-9 w-9"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+            <div className="flex-1 sm:flex-none">
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">
+                {currentFolder ? currentFolder.name : "All Bookmarks"}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? "s" : ""}
+                {selectedTag && ` tagged "${selectedTag}"`}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none sm:w-72">
               {isSemanticSearching ? (
                 <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
               ) : (
@@ -333,7 +350,7 @@ export function Dashboard() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="AI-powered search..."
-                className="w-72 pl-10 bg-secondary"
+                className="w-full sm:w-72 pl-10 bg-secondary text-sm"
               />
               {searchQuery && (
                 <button
@@ -348,28 +365,28 @@ export function Dashboard() {
               )}
             </div>
             {bookmarks.some((b) => !b.tags || b.tags.length === 0) && (
-              <Button variant="outline" onClick={handleRetagAll}>
+              <Button variant="outline" onClick={handleRetagAll} size="sm" className="hidden sm:flex">
                 <Sparkles className="h-4 w-4 mr-2" />
                 Tag All
               </Button>
             )}
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Bookmark
+            <Button onClick={() => setIsAddModalOpen(true)} size="sm" className="flex-shrink-0">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Bookmark</span>
             </Button>
           </div>
         </header>
 
         {/* Tag filter bar */}
         {usedTags.length > 0 && (
-          <div className="border-b border-border px-6 py-3 shrink-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground mr-2">Filter by tag:</span>
+          <div className="border-b border-border px-4 sm:px-6 py-2 sm:py-3 shrink-0 overflow-x-auto">
+            <div className="flex items-center gap-2 flex-wrap min-w-max sm:min-w-0">
+              <span className="text-xs text-muted-foreground mr-2 whitespace-nowrap">Filter by tag:</span>
               {usedTags.map((tag) => (
                 <TagBadge key={tag} tag={tag} active={selectedTag === tag} onClick={() => handleTagClick(tag)} />
               ))}
               {selectedTag && (
-                <Button variant="ghost" size="sm" onClick={() => setSelectedTag(null)} className="h-6 text-xs">
+                <Button variant="ghost" size="sm" onClick={() => setSelectedTag(null)} className="h-6 text-xs whitespace-nowrap">
                   Clear filter
                 </Button>
               )}
@@ -378,13 +395,13 @@ export function Dashboard() {
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredBookmarks.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredBookmarks.map((bookmark, index) => (
                 <div key={bookmark.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                   <BookmarkCard
@@ -423,8 +440,8 @@ export function Dashboard() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-border px-6 py-3 shrink-0">
-          <p className="text-sm text-muted-foreground text-center">
+        <footer className="border-t border-border px-4 sm:px-6 py-2 sm:py-3 shrink-0">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center">
             Created by{" "}
             <a
               href="https://x.com/abhxy03"
