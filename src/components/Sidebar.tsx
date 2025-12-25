@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface Folder {
@@ -25,19 +26,31 @@ interface SidebarProps {
   selectedFolder: string | null;
   onSelectFolder: (folderId: string | null) => void;
   onFolderCreated: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function Sidebar({ 
   folders, 
   selectedFolder, 
   onSelectFolder,
-  onFolderCreated 
+  onFolderCreated,
+  isOpen = true,
+  onClose
 }: SidebarProps) {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSelectFolder = (folderId: string | null) => {
+    onSelectFolder(folderId);
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
 
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,14 +81,38 @@ export function Sidebar({
   };
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-border px-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-          <Bookmark className="h-5 w-5 text-primary" />
+    <>
+      {/* Mobile overlay */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      <aside className={cn(
+        "flex h-screen flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
+        "fixed lg:static z-50",
+        "w-64",
+        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
+      )}>
+        {/* Logo */}
+        <div className="flex h-16 items-center gap-3 border-b border-border px-4 shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Bookmark className="h-5 w-5 text-primary" />
+          </div>
+          <span className="font-semibold text-foreground">X Bookmarks</span>
+          {isMobile && onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="ml-auto h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-        <span className="font-semibold text-foreground">X Bookmarks</span>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3">
@@ -85,7 +122,7 @@ export function Sidebar({
 
         {/* All Bookmarks */}
         <button
-          onClick={() => onSelectFolder(null)}
+          onClick={() => handleSelectFolder(null)}
           className={cn(
             "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
             selectedFolder === null
@@ -146,7 +183,7 @@ export function Sidebar({
             {folders.map((folder) => (
               <button
                 key={folder.id}
-                onClick={() => onSelectFolder(folder.id)}
+                onClick={() => handleSelectFolder(folder.id)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors group",
                   selectedFolder === folder.id
@@ -191,5 +228,6 @@ export function Sidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }
