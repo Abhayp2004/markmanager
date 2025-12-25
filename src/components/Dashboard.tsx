@@ -181,6 +181,56 @@ export function Dashboard() {
     }
   };
 
+  const handleRetagBookmark = async (bookmark: BookmarkType) => {
+    toast({ title: 'Analyzing...', description: 'AI is categorizing this bookmark' });
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-bookmarks', {
+        body: { 
+          action: 'analyze', 
+          content: bookmark.content,
+          tweetUrl: bookmark.tweet_url
+        }
+      });
+
+      if (error) throw error;
+
+      const newTags = data.tags || ['other'];
+      
+      await supabase
+        .from('bookmarks')
+        .update({ tags: newTags, content: data.summary || bookmark.content })
+        .eq('id', bookmark.id);
+
+      fetchBookmarks();
+      toast({
+        title: 'Tagged',
+        description: `Updated tags: ${newTags.join(', ')}`,
+      });
+    } catch (error) {
+      console.error('Retag error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to analyze bookmark',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRetagAll = async () => {
+    const untaggedBookmarks = bookmarks.filter(b => !b.tags || b.tags.length === 0);
+    if (untaggedBookmarks.length === 0) {
+      toast({ title: 'All bookmarks are tagged' });
+      return;
+    }
+
+    toast({ title: 'Analyzing...', description: `Tagging ${untaggedBookmarks.length} bookmarks` });
+
+    for (const bookmark of untaggedBookmarks) {
+      await handleRetagBookmark(bookmark);
+    }
+  };
+
   const handleTagClick = (tag: string) => {
     setSelectedTag(prev => prev === tag ? null : tag);
     setSemanticResults(null);
@@ -266,6 +316,12 @@ export function Dashboard() {
                 </button>
               )}
             </div>
+            {bookmarks.some(b => !b.tags || b.tags.length === 0) && (
+              <Button variant="outline" onClick={handleRetagAll}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Tag All
+              </Button>
+            )}
             <Button onClick={() => setIsAddModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Bookmark
@@ -320,6 +376,7 @@ export function Dashboard() {
                     onDelete={handleDeleteBookmark}
                     onMove={handleMoveBookmark}
                     onTagClick={handleTagClick}
+                    onRetag={handleRetagBookmark}
                   />
                 </div>
               ))}

@@ -100,26 +100,31 @@ export function AddBookmarkModal({
           tweetContent = extractTextFromHtml(data.html);
         }
       } catch (fetchError) {
-        console.log('oEmbed fetch failed, saving with fallback');
+        console.log('oEmbed fetch failed, will use AI to analyze URL');
       }
 
-      // Get AI-generated tags
+      // Get AI-generated tags - pass URL even if no content
       let tags: string[] = [];
       let summary = '';
       
-      if (tweetContent) {
-        try {
-          const aiResponse = await supabase.functions.invoke('ai-bookmarks', {
-            body: { action: 'analyze', content: tweetContent }
-          });
-          
-          if (aiResponse.data && !aiResponse.error) {
-            tags = aiResponse.data.tags || [];
-            summary = aiResponse.data.summary || '';
+      try {
+        const aiResponse = await supabase.functions.invoke('ai-bookmarks', {
+          body: { 
+            action: 'analyze', 
+            content: tweetContent,
+            tweetUrl: url.trim()
           }
-        } catch (aiError) {
-          console.log('AI tagging failed, saving without tags');
+        });
+        
+        if (aiResponse.data && !aiResponse.error) {
+          tags = aiResponse.data.tags || [];
+          summary = aiResponse.data.summary || '';
+          console.log('AI returned tags:', tags);
+        } else {
+          console.error('AI error:', aiResponse.error);
         }
+      } catch (aiError) {
+        console.log('AI tagging failed:', aiError);
       }
 
       // Save bookmark with tags
@@ -130,7 +135,7 @@ export function AddBookmarkModal({
         embed_html: embedHtml,
         author_name: authorName,
         author_url: authorUrl,
-        tags: tags,
+        tags: tags.length > 0 ? tags : ['other'],
         content: tweetContent || summary,
       });
 
@@ -140,7 +145,7 @@ export function AddBookmarkModal({
         title: 'Bookmark saved',
         description: tags.length > 0 
           ? `Tagged as: ${tags.join(', ')}`
-          : 'Your tweet has been bookmarked successfully',
+          : 'Your tweet has been bookmarked',
       });
 
       setUrl('');
