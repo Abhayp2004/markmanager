@@ -30,7 +30,7 @@ interface BookmarkType {
 const AVAILABLE_TAGS = [
   'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics', 
   'science', 'business', 'lifestyle', 'entertainment', 'education',
-  'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation'
+  'health', 'art', 'music', 'gaming', 'travel', 'food','spiritual', 'motivation'
 ];
 
 export function Dashboard() {
