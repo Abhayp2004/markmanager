@@ -172,19 +172,19 @@ export default function Auth() {
         </div>
 
         {/* 👇 Creator credit */}
-        <div className="mt-6 text-center text-xs text-muted-foreground">
-          Created by{' '}
-          <span className="font-medium text-foreground" >
-            Abhay Parekh
-          </span>{' '}
-          ·{' '}
-          <a
-            href="https://x.com/abhxy03"
-            rel="noopener noreferrer"
-            className="hover:text-primary transition-colors"
-          >
-          </a>
-        </div>
+        <footer className="border-t border-border px-6 py-3 shrink-0">
+          <p className="text-sm text-muted-foreground text-center">
+            Created by{" "}
+            <a
+              href="https://x.com/abhxy03"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              Abhay Parekh
+            </a>
+          </p>
+        </footer>
       </div>
     </div>
   );
