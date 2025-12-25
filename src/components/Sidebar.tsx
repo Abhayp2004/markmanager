@@ -91,9 +91,12 @@ export function Sidebar({
       )}
       
       <aside className={cn(
-        "flex h-screen flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
+        "flex flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
         "fixed lg:static z-50",
-        "w-64 overflow-hidden",
+        "w-64",
+        "top-0 left-0 bottom-0",
+        "h-[100vh] lg:h-screen",
+        "overflow-hidden",
         isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
       )}>
         {/* Logo */}
@@ -115,7 +118,13 @@ export function Sidebar({
         </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0">
+      <nav 
+        className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
+      >
         <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Collections
         </div>
