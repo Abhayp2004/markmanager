@@ -93,7 +93,7 @@ export function Sidebar({
       <aside className={cn(
         "flex h-screen flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
         "fixed lg:static z-50",
-        "w-64",
+        "w-64 overflow-hidden",
         isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
       )}>
         {/* Logo */}
@@ -115,7 +115,7 @@ export function Sidebar({
         </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-3">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0">
         <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Collections
         </div>
@@ -207,7 +207,7 @@ export function Sidebar({
       </nav>
 
       {/* User section */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border p-3 shrink-0">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
             {user?.email?.charAt(0).toUpperCase()}
