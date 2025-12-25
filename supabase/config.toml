@@ -1,1 +1,4 @@
 project_id = "wlpjoojxlvfqjjedhujf"
+
+[functions.ai-bookmarks]
+verify_jwt = false

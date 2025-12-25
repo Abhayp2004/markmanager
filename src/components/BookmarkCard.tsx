@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { TagBadge } from '@/components/TagBadge';
 import { 
   MoreHorizontal, 
   Trash2, 
@@ -23,6 +24,8 @@ interface Bookmark {
   author_name: string | null;
   folder_id: string | null;
   created_at: string;
+  tags?: string[];
+  content?: string | null;
 }
 
 interface Folder {
@@ -35,18 +38,17 @@ interface BookmarkCardProps {
   folders: Folder[];
   onDelete: (id: string) => void;
   onMove: (id: string, folderId: string | null) => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export function BookmarkCard({ bookmark, folders, onDelete, onMove }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, folders, onDelete, onMove, onTagClick }: BookmarkCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (bookmark.embed_html && containerRef.current) {
-      // Clear previous content
       containerRef.current.innerHTML = bookmark.embed_html;
       
-      // Load Twitter widgets script
       const script = document.createElement('script');
       script.src = 'https://platform.twitter.com/widgets.js';
       script.async = true;
@@ -54,12 +56,13 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove }: BookmarkCa
       document.body.appendChild(script);
 
       return () => {
-        // Cleanup script
         const existingScripts = document.querySelectorAll('script[src*="platform.twitter.com/widgets.js"]');
         existingScripts.forEach(s => s.remove());
       };
     }
   }, [bookmark.embed_html]);
+
+  const tags = bookmark.tags || [];
 
   return (
     <div className={cn(
@@ -98,7 +101,6 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove }: BookmarkCa
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             
-            {/* Move to folder options */}
             {folders.length > 0 && (
               <>
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
@@ -136,6 +138,20 @@ export function BookmarkCard({ bookmark, folders, onDelete, onMove }: BookmarkCa
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 px-4 pt-3">
+          {tags.map((tag) => (
+            <TagBadge 
+              key={tag} 
+              tag={tag} 
+              size="sm"
+              onClick={() => onTagClick?.(tag)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Tweet embed or fallback */}
       {bookmark.embed_html ? (

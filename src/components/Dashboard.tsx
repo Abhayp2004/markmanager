@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { BookmarkCard } from '@/components/BookmarkCard';
 import { AddBookmarkModal } from '@/components/AddBookmarkModal';
+import { TagBadge } from '@/components/TagBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Bookmark, Loader2 } from 'lucide-react';
+import { Plus, Search, Bookmark, Loader2, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +22,15 @@ interface BookmarkType {
   author_name: string | null;
   folder_id: string | null;
   created_at: string;
+  tags?: string[];
+  content?: string | null;
 }
+
+const AVAILABLE_TAGS = [
+  'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics', 
+  'science', 'business', 'lifestyle', 'entertainment', 'education',
+  'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation'
+];
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -29,9 +38,12 @@ export function Dashboard() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSemanticSearching, setIsSemanticSearching] = useState(false);
+  const [semanticResults, setSemanticResults] = useState<string[] | null>(null);
 
   const fetchFolders = async () => {
     if (!user) return;
@@ -75,8 +87,60 @@ export function Dashboard() {
 
   useEffect(() => {
     setIsLoading(true);
+    setSemanticResults(null);
     fetchBookmarks();
   }, [user, selectedFolder]);
+
+  const performSemanticSearch = useCallback(async () => {
+    if (!searchQuery.trim() || bookmarks.length === 0) {
+      setSemanticResults(null);
+      return;
+    }
+
+    setIsSemanticSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-bookmarks', {
+        body: { 
+          action: 'semantic-search', 
+          query: searchQuery,
+          bookmarks: bookmarks.map(b => ({
+            id: b.id,
+            author_name: b.author_name,
+            tweet_url: b.tweet_url,
+            tags: b.tags,
+            content: b.content
+          }))
+        }
+      });
+
+      if (error) throw error;
+      setSemanticResults(data.results || []);
+    } catch (error) {
+      console.error('Semantic search error:', error);
+      toast({
+        title: 'Search error',
+        description: 'AI search failed, showing text matches instead',
+        variant: 'destructive',
+      });
+      setSemanticResults(null);
+    } finally {
+      setIsSemanticSearching(false);
+    }
+  }, [searchQuery, bookmarks, toast]);
+
+  // Debounced semantic search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSemanticResults(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      performSemanticSearch();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, performSemanticSearch]);
 
   const handleDeleteBookmark = async (id: string) => {
     const { error } = await supabase.from('bookmarks').delete().eq('id', id);
@@ -117,16 +181,43 @@ export function Dashboard() {
     }
   };
 
-  const filteredBookmarks = bookmarks.filter(bookmark => {
-    if (!searchQuery) return true;
-    const search = searchQuery.toLowerCase();
-    return (
-      bookmark.tweet_url.toLowerCase().includes(search) ||
-      bookmark.author_name?.toLowerCase().includes(search)
-    );
-  });
+  const handleTagClick = (tag: string) => {
+    setSelectedTag(prev => prev === tag ? null : tag);
+    setSemanticResults(null);
+  };
 
+  // Get filtered bookmarks
+  const getFilteredBookmarks = () => {
+    let filtered = bookmarks;
+
+    // Filter by tag
+    if (selectedTag) {
+      filtered = filtered.filter(b => b.tags?.includes(selectedTag));
+    }
+
+    // Filter by semantic search results or text search
+    if (searchQuery.trim()) {
+      if (semanticResults !== null) {
+        filtered = filtered.filter(b => semanticResults.includes(b.id));
+      } else {
+        const search = searchQuery.toLowerCase();
+        filtered = filtered.filter(b =>
+          b.tweet_url.toLowerCase().includes(search) ||
+          b.author_name?.toLowerCase().includes(search) ||
+          b.tags?.some(t => t.toLowerCase().includes(search)) ||
+          b.content?.toLowerCase().includes(search)
+        );
+      }
+    }
+
+    return filtered;
+  };
+
+  const filteredBookmarks = getFilteredBookmarks();
   const currentFolder = folders.find(f => f.id === selectedFolder);
+
+  // Get unique tags from all bookmarks
+  const usedTags = [...new Set(bookmarks.flatMap(b => b.tags || []))];
 
   return (
     <div className="flex h-screen bg-background">
@@ -137,27 +228,43 @@ export function Dashboard() {
         onFolderCreated={fetchFolders}
       />
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-border px-6 h-16">
+        <header className="flex items-center justify-between border-b border-border px-6 h-16 shrink-0">
           <div>
             <h1 className="text-xl font-semibold text-foreground">
               {currentFolder ? currentFolder.name : 'All Bookmarks'}
             </h1>
             <p className="text-sm text-muted-foreground">
               {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? 's' : ''}
+              {selectedTag && ` tagged "${selectedTag}"`}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              {isSemanticSearching ? (
+                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
+              ) : (
+                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+              )}
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search bookmarks..."
-                className="w-64 pl-10 bg-secondary"
+                placeholder="AI-powered search..."
+                className="w-72 pl-10 bg-secondary"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSemanticResults(null);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <Button onClick={() => setIsAddModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -165,6 +272,33 @@ export function Dashboard() {
             </Button>
           </div>
         </header>
+
+        {/* Tag filter bar */}
+        {usedTags.length > 0 && (
+          <div className="border-b border-border px-6 py-3 shrink-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground mr-2">Filter by tag:</span>
+              {usedTags.map(tag => (
+                <TagBadge
+                  key={tag}
+                  tag={tag}
+                  active={selectedTag === tag}
+                  onClick={() => handleTagClick(tag)}
+                />
+              ))}
+              {selectedTag && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedTag(null)}
+                  className="h-6 text-xs"
+                >
+                  Clear filter
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -185,6 +319,7 @@ export function Dashboard() {
                     folders={folders}
                     onDelete={handleDeleteBookmark}
                     onMove={handleMoveBookmark}
+                    onTagClick={handleTagClick}
                   />
                 </div>
               ))}
@@ -195,15 +330,15 @@ export function Dashboard() {
                 <Bookmark className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground">
-                {searchQuery ? 'No bookmarks found' : 'No bookmarks yet'}
+                {searchQuery || selectedTag ? 'No bookmarks found' : 'No bookmarks yet'}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                {searchQuery 
-                  ? 'Try adjusting your search terms'
+                {searchQuery || selectedTag
+                  ? 'Try adjusting your search or filter'
                   : 'Start by adding your first tweet bookmark using the button above'
                 }
               </p>
-              {!searchQuery && (
+              {!searchQuery && !selectedTag && (
                 <Button 
                   onClick={() => setIsAddModalOpen(true)}
                   className="mt-4"
