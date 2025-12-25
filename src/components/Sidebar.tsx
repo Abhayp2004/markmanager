@@ -90,17 +90,24 @@ export function Sidebar({
         />
       )}
       
-      <aside className={cn(
-        "flex flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
-        "fixed lg:static z-50",
-        "w-64",
-        "top-0 left-0 bottom-0",
-        "h-[100vh] lg:h-screen",
-        "overflow-hidden",
-        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
-      )}>
+      <aside 
+        className={cn(
+          "flex flex-col border-r border-border bg-sidebar transition-transform duration-300 ease-in-out",
+          "fixed lg:static z-50",
+          "w-64",
+          "inset-y-0 left-0",
+          "overflow-hidden",
+          isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
+        )}
+        style={{ 
+          height: '100vh',
+          maxHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* Logo */}
-        <div className="flex h-16 items-center gap-3 border-b border-border px-4 shrink-0">
+        <div className="flex h-16 items-center gap-3 border-b border-border px-4 shrink-0 flex-shrink-0">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Bookmark className="h-5 w-5 text-primary" />
           </div>
@@ -117,12 +124,16 @@ export function Sidebar({
           )}
         </div>
 
-      {/* Navigation */}
+      {/* Navigation - Scrollable area */}
       <nav 
-        className="flex-1 overflow-y-auto overflow-x-hidden p-3 min-h-0" 
+        className="flex-1 overflow-y-auto overflow-x-hidden p-3" 
         style={{ 
           WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain'
+          overscrollBehavior: 'contain',
+          minHeight: 0,
+          flex: '1 1 auto',
+          overflowY: 'auto',
+          overflowX: 'hidden'
         }}
       >
         <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -215,8 +226,8 @@ export function Sidebar({
         </div>
       </nav>
 
-      {/* User section */}
-      <div className="border-t border-border p-3 shrink-0">
+      {/* User section - Fixed at bottom */}
+      <div className="border-t border-border p-3 shrink-0 flex-shrink-0">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
             {user?.email?.charAt(0).toUpperCase()}
