@@ -8,7 +8,8 @@ const corsHeaders = {
 const AVAILABLE_TAGS = [
   'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics', 
   'science', 'business', 'lifestyle', 'entertainment', 'education',
-  'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation', 'other'
+  'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation', 
+  'spiritual', 'other'
 ];
 
 serve(async (req) => {
