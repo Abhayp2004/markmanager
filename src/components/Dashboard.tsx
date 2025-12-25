@@ -1,0 +1,230 @@
+import { useState, useEffect } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { BookmarkCard } from '@/components/BookmarkCard';
+import { AddBookmarkModal } from '@/components/AddBookmarkModal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Plus, Search, Bookmark, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+
+interface Folder {
+  id: string;
+  name: string;
+}
+
+interface BookmarkType {
+  id: string;
+  tweet_url: string;
+  embed_html: string | null;
+  author_name: string | null;
+  folder_id: string | null;
+  created_at: string;
+}
+
+export function Dashboard() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchFolders = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('folders')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching folders:', error);
+    } else {
+      setFolders(data || []);
+    }
+  };
+
+  const fetchBookmarks = async () => {
+    if (!user) return;
+    
+    let query = supabase
+      .from('bookmarks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (selectedFolder) {
+      query = query.eq('folder_id', selectedFolder);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching bookmarks:', error);
+    } else {
+      setBookmarks(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchFolders();
+  }, [user]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchBookmarks();
+  }, [user, selectedFolder]);
+
+  const handleDeleteBookmark = async (id: string) => {
+    const { error } = await supabase.from('bookmarks').delete().eq('id', id);
+    
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete bookmark',
+        variant: 'destructive',
+      });
+    } else {
+      setBookmarks(prev => prev.filter(b => b.id !== id));
+      toast({
+        title: 'Deleted',
+        description: 'Bookmark has been removed',
+      });
+    }
+  };
+
+  const handleMoveBookmark = async (id: string, folderId: string | null) => {
+    const { error } = await supabase
+      .from('bookmarks')
+      .update({ folder_id: folderId })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to move bookmark',
+        variant: 'destructive',
+      });
+    } else {
+      fetchBookmarks();
+      toast({
+        title: 'Moved',
+        description: folderId ? 'Bookmark moved to folder' : 'Bookmark removed from folder',
+      });
+    }
+  };
+
+  const filteredBookmarks = bookmarks.filter(bookmark => {
+    if (!searchQuery) return true;
+    const search = searchQuery.toLowerCase();
+    return (
+      bookmark.tweet_url.toLowerCase().includes(search) ||
+      bookmark.author_name?.toLowerCase().includes(search)
+    );
+  });
+
+  const currentFolder = folders.find(f => f.id === selectedFolder);
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar
+        folders={folders}
+        selectedFolder={selectedFolder}
+        onSelectFolder={setSelectedFolder}
+        onFolderCreated={fetchFolders}
+      />
+
+      <main className="flex-1 overflow-hidden">
+        {/* Header */}
+        <header className="flex items-center justify-between border-b border-border px-6 h-16">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">
+              {currentFolder ? currentFolder.name : 'All Bookmarks'}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search bookmarks..."
+                className="w-64 pl-10 bg-secondary"
+              />
+            </div>
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Bookmark
+            </Button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredBookmarks.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredBookmarks.map((bookmark, index) => (
+                <div 
+                  key={bookmark.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <BookmarkCard
+                    bookmark={bookmark}
+                    folders={folders}
+                    onDelete={handleDeleteBookmark}
+                    onMove={handleMoveBookmark}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                <Bookmark className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">
+                {searchQuery ? 'No bookmarks found' : 'No bookmarks yet'}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+                {searchQuery 
+                  ? 'Try adjusting your search terms'
+                  : 'Start by adding your first tweet bookmark using the button above'
+                }
+              </p>
+              {!searchQuery && (
+                <Button 
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="mt-4"
+                  variant="glow"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add your first bookmark
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <AddBookmarkModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        folders={folders}
+        selectedFolder={selectedFolder}
+        onBookmarkAdded={fetchBookmarks}
+      />
+    </div>
+  );
+}
