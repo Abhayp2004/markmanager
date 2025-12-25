@@ -18,10 +18,12 @@ export type Database = {
         Row: {
           author_name: string | null
           author_url: string | null
+          content: string | null
           created_at: string
           embed_html: string | null
           folder_id: string | null
           id: string
+          tags: string[] | null
           tweet_url: string
           updated_at: string
           user_id: string
@@ -29,10 +31,12 @@ export type Database = {
         Insert: {
           author_name?: string | null
           author_url?: string | null
+          content?: string | null
           created_at?: string
           embed_html?: string | null
           folder_id?: string | null
           id?: string
+          tags?: string[] | null
           tweet_url: string
           updated_at?: string
           user_id: string
@@ -40,10 +44,12 @@ export type Database = {
         Update: {
           author_name?: string | null
           author_url?: string | null
+          content?: string | null
           created_at?: string
           embed_html?: string | null
           folder_id?: string | null
           id?: string
+          tags?: string[] | null
           tweet_url?: string
           updated_at?: string
           user_id?: string

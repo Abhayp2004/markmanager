@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Plus, Link } from 'lucide-react';
+import { Loader2, Plus, Link, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +60,12 @@ export function AddBookmarkModal({
     return null;
   };
 
+  const extractTextFromHtml = (html: string): string => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim() || !user) return;
@@ -82,6 +88,7 @@ export function AddBookmarkModal({
       let embedHtml: string | null = null;
       let authorName: string | null = null;
       let authorUrl: string | null = null;
+      let tweetContent = '';
 
       try {
         const response = await fetch(oembedUrl);
@@ -90,12 +97,32 @@ export function AddBookmarkModal({
           embedHtml = data.html;
           authorName = data.author_name;
           authorUrl = data.author_url;
+          tweetContent = extractTextFromHtml(data.html);
         }
       } catch (fetchError) {
         console.log('oEmbed fetch failed, saving with fallback');
       }
 
-      // Save bookmark
+      // Get AI-generated tags
+      let tags: string[] = [];
+      let summary = '';
+      
+      if (tweetContent) {
+        try {
+          const aiResponse = await supabase.functions.invoke('ai-bookmarks', {
+            body: { action: 'analyze', content: tweetContent }
+          });
+          
+          if (aiResponse.data && !aiResponse.error) {
+            tags = aiResponse.data.tags || [];
+            summary = aiResponse.data.summary || '';
+          }
+        } catch (aiError) {
+          console.log('AI tagging failed, saving without tags');
+        }
+      }
+
+      // Save bookmark with tags
       const { error } = await supabase.from('bookmarks').insert({
         user_id: user.id,
         tweet_url: url.trim(),
@@ -103,13 +130,17 @@ export function AddBookmarkModal({
         embed_html: embedHtml,
         author_name: authorName,
         author_url: authorUrl,
+        tags: tags,
+        content: tweetContent || summary,
       });
 
       if (error) throw error;
 
       toast({
         title: 'Bookmark saved',
-        description: 'Your tweet has been bookmarked successfully',
+        description: tags.length > 0 
+          ? `Tagged as: ${tags.join(', ')}`
+          : 'Your tweet has been bookmarked successfully',
       });
 
       setUrl('');
@@ -136,8 +167,9 @@ export function AddBookmarkModal({
             <Plus className="h-5 w-5 text-primary" />
             Add Bookmark
           </DialogTitle>
-          <DialogDescription>
-            Paste a tweet URL to save it to your collection
+          <DialogDescription className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-primary" />
+            AI will automatically categorize your bookmark
           </DialogDescription>
         </DialogHeader>
 
@@ -192,7 +224,10 @@ export function AddBookmarkModal({
               disabled={isLoading || !url.trim()}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Analyzing...
+                </>
               ) : (
                 'Save Bookmark'
               )}
