@@ -90,7 +90,7 @@ export default function Auth() {
             <Bookmark className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            X Bookmarks
+            X Bookmarks Manager
           </h1>
           <p className="mt-2 text-muted-foreground">
             Organize your favorite tweets in one place
