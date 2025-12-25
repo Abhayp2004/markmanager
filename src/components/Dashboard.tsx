@@ -1,450 +1,248 @@
-import { useState, useEffect, useCallback } from "react";
-import { Sidebar } from "@/components/Sidebar";
-import { BookmarkCard } from "@/components/BookmarkCard";
-import { AddBookmarkModal } from "@/components/AddBookmarkModal";
-import { TagBadge } from "@/components/TagBadge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, Bookmark, Loader2, Sparkles, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2, Plus, Link, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Folder {
   id: string;
   name: string;
 }
 
-interface BookmarkType {
-  id: string;
-  tweet_url: string;
-  embed_html: string | null;
-  author_name: string | null;
-  folder_id: string | null;
-  created_at: string;
-  tags?: string[];
-  content?: string | null;
-  notes?: string | null;
+interface AddBookmarkModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  folders: Folder[];
+  selectedFolder: string | null;
+  onBookmarkAdded: () => void;
 }
 
-const AVAILABLE_TAGS = [
-  "tech",
-  "ai",
-  "crypto",
-  "sports",
-  "funny",
-  "news",
-  "politics",
-  "science",
-  "business",
-  "lifestyle",
-  "entertainment",
-  "education",
-  "health",
-  "art",
-  "music",
-  "gaming",
-  "travel",
-  "food",
-  "spiritual",
-  "motivation",
-];
-
-export function Dashboard() {
+export function AddBookmarkModal({
+  open,
+  onOpenChange,
+  folders,
+  selectedFolder,
+  onBookmarkAdded,
+}: AddBookmarkModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSemanticSearching, setIsSemanticSearching] = useState(false);
-  const [semanticResults, setSemanticResults] = useState<string[] | null>(null);
+  const [url, setUrl] = useState('');
+  const [folderId, setFolderId] = useState<string | null>(selectedFolder);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchFolders = async () => {
-    if (!user) return;
-    const { data, error } = await supabase.from("folders").select("*").order("created_at", { ascending: true });
+  const extractTweetId = (url: string): string | null => {
+    const patterns = [
+      /(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/,
+      /(?:twitter\.com|x\.com)\/\w+\/statuses\/(\d+)/,
+    ];
 
-    if (error) {
-      console.error("Error fetching folders:", error);
-    } else {
-      setFolders(data || []);
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
     }
+    return null;
   };
 
-  const fetchBookmarks = async () => {
-    if (!user) return;
-
-    let query = supabase.from("bookmarks").select("*").order("created_at", { ascending: false });
-
-    if (selectedFolder) {
-      query = query.eq("folder_id", selectedFolder);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Error fetching bookmarks:", error);
-    } else {
-      setBookmarks(data || []);
-    }
-    setIsLoading(false);
+  const extractTextFromHtml = (html: string): string => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
   };
 
-  useEffect(() => {
-    fetchFolders();
-  }, [user]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url.trim() || !user) return;
 
-  useEffect(() => {
+    const tweetId = extractTweetId(url.trim());
+    if (!tweetId) {
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid X/Twitter post URL',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
-    setSemanticResults(null);
-    fetchBookmarks();
-  }, [user, selectedFolder]);
-
-  const performSemanticSearch = useCallback(async () => {
-    if (!searchQuery.trim() || bookmarks.length === 0) {
-      setSemanticResults(null);
-      return;
-    }
-
-    setIsSemanticSearching(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-bookmarks", {
-        body: {
-          action: "semantic-search",
-          query: searchQuery,
-          bookmarks: bookmarks.map((b) => ({
-            id: b.id,
-            author_name: b.author_name,
-            tweet_url: b.tweet_url,
-            tags: b.tags,
-            content: b.content,
-          })),
-        },
-      });
-
-      if (error) throw error;
-      setSemanticResults(data.results || []);
-    } catch (error) {
-      console.error("Semantic search error:", error);
-      toast({
-        title: "Search error",
-        description: "AI search failed, showing text matches instead",
-        variant: "destructive",
-      });
-      setSemanticResults(null);
-    } finally {
-      setIsSemanticSearching(false);
-    }
-  }, [searchQuery, bookmarks, toast]);
-
-  // Debounced semantic search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSemanticResults(null);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      performSemanticSearch();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, performSemanticSearch]);
-
-  const handleDeleteBookmark = async (id: string) => {
-    const { error } = await supabase.from("bookmarks").delete().eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete bookmark",
-        variant: "destructive",
-      });
-    } else {
-      setBookmarks((prev) => prev.filter((b) => b.id !== id));
-      toast({
-        title: "Deleted",
-        description: "Bookmark has been removed",
-      });
-    }
-  };
-
-  const handleMoveBookmark = async (id: string, folderId: string | null) => {
-    const { error } = await supabase.from("bookmarks").update({ folder_id: folderId }).eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to move bookmark",
-        variant: "destructive",
-      });
-    } else {
-      fetchBookmarks();
-      toast({
-        title: "Moved",
-        description: folderId ? "Bookmark moved to folder" : "Bookmark removed from folder",
-      });
-    }
-  };
-
-  const handleRetagBookmark = async (bookmark: BookmarkType) => {
-    toast({ title: "Analyzing...", description: "AI is categorizing this bookmark" });
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-bookmarks", {
-        body: {
-          action: "analyze",
-          content: bookmark.content,
-          tweetUrl: bookmark.tweet_url,
-        },
-      });
+      const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(
+        url.trim()
+      )}&omit_script=true`;
 
-      if (error) throw error;
+      let embedHtml: string | null = null;
+      let authorName: string | null = null;
+      let authorUrl: string | null = null;
+      let tweetContent = '';
 
-      const newTags = data.tags || ["other"];
-
-      await supabase
-        .from("bookmarks")
-        .update({ tags: newTags, content: data.summary || bookmark.content })
-        .eq("id", bookmark.id);
-
-      fetchBookmarks();
-      toast({
-        title: "Tagged",
-        description: `Updated tags: ${newTags.join(", ")}`,
-      });
-    } catch (error) {
-      console.error("Retag error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to analyze bookmark",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRetagAll = async () => {
-    const untaggedBookmarks = bookmarks.filter((b) => !b.tags || b.tags.length === 0);
-    if (untaggedBookmarks.length === 0) {
-      toast({ title: "All bookmarks are tagged" });
-      return;
-    }
-
-    toast({ title: "Analyzing...", description: `Tagging ${untaggedBookmarks.length} bookmarks` });
-
-    for (const bookmark of untaggedBookmarks) {
-      await handleRetagBookmark(bookmark);
-    }
-  };
-
-  const handleUpdateNotes = async (id: string, notes: string) => {
-    const { error } = await supabase
-      .from("bookmarks")
-      .update({ notes: notes || null })
-      .eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save note",
-        variant: "destructive",
-      });
-    } else {
-      setBookmarks((prev) => prev.map((b) => (b.id === id ? { ...b, notes: notes || null } : b)));
-      toast({
-        title: "Note saved",
-        description: "Your note has been updated",
-      });
-    }
-  };
-
-  const handleTagClick = (tag: string) => {
-    setSelectedTag((prev) => (prev === tag ? null : tag));
-    setSemanticResults(null);
-  };
-
-  // Get filtered bookmarks
-  const getFilteredBookmarks = () => {
-    let filtered = bookmarks;
-
-    // Filter by tag
-    if (selectedTag) {
-      filtered = filtered.filter((b) => b.tags?.includes(selectedTag));
-    }
-
-    // Filter by semantic search results or text search
-    if (searchQuery.trim()) {
-      if (semanticResults !== null) {
-        filtered = filtered.filter((b) => semanticResults.includes(b.id));
-      } else {
-        const search = searchQuery.toLowerCase();
-        filtered = filtered.filter(
-          (b) =>
-            b.tweet_url.toLowerCase().includes(search) ||
-            b.author_name?.toLowerCase().includes(search) ||
-            b.tags?.some((t) => t.toLowerCase().includes(search)) ||
-            b.content?.toLowerCase().includes(search),
-        );
+      try {
+        const response = await fetch(oembedUrl);
+        if (response.ok) {
+          const data = await response.json();
+          embedHtml = data.html;
+          authorName = data.author_name;
+          authorUrl = data.author_url;
+          tweetContent = extractTextFromHtml(data.html);
+        }
+      } catch {
+        console.log('oEmbed fetch failed');
       }
+
+      let tags: string[] = [];
+      let summary = '';
+
+      try {
+        const aiResponse = await supabase.functions.invoke('ai-bookmarks', {
+          body: {
+            action: 'analyze',
+            content: tweetContent,
+            tweetUrl: url.trim(),
+          },
+        });
+
+        if (aiResponse.data && !aiResponse.error) {
+          tags = aiResponse.data.tags || [];
+          summary = aiResponse.data.summary || '';
+        }
+      } catch {
+        console.log('AI tagging failed');
+      }
+
+      const { error } = await supabase.from('bookmarks').insert({
+        user_id: user.id,
+        tweet_url: url.trim(),
+        folder_id: folderId || null,
+        embed_html: embedHtml,
+        author_name: authorName,
+        author_url: authorUrl,
+        tags: tags.length > 0 ? tags : ['other'],
+        content: tweetContent || summary,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Bookmark saved',
+        description:
+          tags.length > 0
+            ? `Tagged as: ${tags.join(', ')}`
+            : 'Your tweet has been bookmarked',
+      });
+
+      setUrl('');
+      setFolderId(selectedFolder);
+      onOpenChange(false);
+      onBookmarkAdded();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save bookmark. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    return filtered;
   };
-
-  const filteredBookmarks = getFilteredBookmarks();
-  const currentFolder = folders.find((f) => f.id === selectedFolder);
-
-  // Get unique tags from all bookmarks
-  const usedTags = [...new Set(bookmarks.flatMap((b) => b.tags || []))];
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar
-        folders={folders}
-        selectedFolder={selectedFolder}
-        onSelectFolder={setSelectedFolder}
-        onFolderCreated={fetchFolders}
-      />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[95vw] max-w-md sm:w-full p-4 sm:p-6">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Plus className="h-5 w-5 text-primary" />
+            Add Bookmark
+          </DialogTitle>
+          <DialogDescription className="flex items-center gap-1 text-sm">
+            <Sparkles className="h-3 w-3 text-primary" />
+            AI will automatically categorize your bookmark
+          </DialogDescription>
+        </DialogHeader>
 
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-border px-6 h-16 shrink-0">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              {currentFolder ? currentFolder.name : "All Bookmarks"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {filteredBookmarks.length} bookmark{filteredBookmarks.length !== 1 ? "s" : ""}
-              {selectedTag && ` tagged "${selectedTag}"`}
-            </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* URL input */}
+          <div className="space-y-2">
+            <Label htmlFor="url">Tweet URL</Label>
+            <div className="relative">
+              <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://x.com/user/status/123..."
+                className="pl-10 h-11 bg-secondary text-base"
+                required
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              {isSemanticSearching ? (
-                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
+          {/* Folder select */}
+          <div className="space-y-2">
+            <Label>Folder (optional)</Label>
+            <Select
+              value={folderId || 'none'}
+              onValueChange={(val) =>
+                setFolderId(val === 'none' ? null : val)
+              }
+            >
+              <SelectTrigger className="h-11 bg-secondary text-base">
+                <SelectValue placeholder="Select a folder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No folder</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="h-11 w-full"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="submit"
+              className="h-11 w-full"
+              disabled={isLoading || !url.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Analyzing...
+                </>
               ) : (
-                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                'Save Bookmark'
               )}
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="AI-powered search..."
-                className="w-72 pl-10 bg-secondary"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSemanticResults(null);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            {bookmarks.some((b) => !b.tags || b.tags.length === 0) && (
-              <Button variant="outline" onClick={handleRetagAll}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Tag All
-              </Button>
-            )}
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Bookmark
             </Button>
           </div>
-        </header>
-
-        {/* Tag filter bar */}
-        {usedTags.length > 0 && (
-          <div className="border-b border-border px-6 py-3 shrink-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground mr-2">Filter by tag:</span>
-              {usedTags.map((tag) => (
-                <TagBadge key={tag} tag={tag} active={selectedTag === tag} onClick={() => handleTagClick(tag)} />
-              ))}
-              {selectedTag && (
-                <Button variant="ghost" size="sm" onClick={() => setSelectedTag(null)} className="h-6 text-xs">
-                  Clear filter
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filteredBookmarks.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredBookmarks.map((bookmark, index) => (
-                <div key={bookmark.id} className="animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
-                  <BookmarkCard
-                    bookmark={bookmark}
-                    folders={folders}
-                    onDelete={handleDeleteBookmark}
-                    onMove={handleMoveBookmark}
-                    onTagClick={handleTagClick}
-                    onRetag={handleRetagBookmark}
-                    onUpdateNotes={handleUpdateNotes}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                <Bookmark className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                {searchQuery || selectedTag ? "No bookmarks found" : "No bookmarks yet"}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                {searchQuery || selectedTag
-                  ? "Try adjusting your search or filter"
-                  : "Start by adding your first tweet bookmark using the button above"}
-              </p>
-              {!searchQuery && !selectedTag && (
-                <Button onClick={() => setIsAddModalOpen(true)} className="mt-4" variant="glow">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add your first bookmark
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <footer className="border-t border-border px-6 py-3 shrink-0">
-          <p className="text-sm text-muted-foreground text-center">
-            Created by{" "}
-            <a
-              href="https://x.com/abhxy03"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
-            >
-              Abhay Parekh
-            </a>
-          </p>
-        </footer>
-      </main>
-
-      <AddBookmarkModal
-        open={isAddModalOpen}
-        onOpenChange={setIsAddModalOpen}
-        folders={folders}
-        selectedFolder={selectedFolder}
-        onBookmarkAdded={fetchBookmarks}
-      />
-    </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
