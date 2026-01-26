@@ -16,49 +16,64 @@ export type Database = {
     Tables: {
       bookmarks: {
         Row: {
+          archived_at: string | null
           author_name: string | null
           author_url: string | null
           content: string | null
           created_at: string
+          duration: string | null
           embed_html: string | null
           folder_id: string | null
+          highlights: Json | null
           id: string
           notes: string | null
           platform: string
           priority: string | null
           tags: string[] | null
+          thumbnail_url: string | null
+          transcript: string | null
           tweet_url: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           author_name?: string | null
           author_url?: string | null
           content?: string | null
           created_at?: string
+          duration?: string | null
           embed_html?: string | null
           folder_id?: string | null
+          highlights?: Json | null
           id?: string
           notes?: string | null
           platform?: string
           priority?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
+          transcript?: string | null
           tweet_url: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           author_name?: string | null
           author_url?: string | null
           content?: string | null
           created_at?: string
+          duration?: string | null
           embed_html?: string | null
           folder_id?: string | null
+          highlights?: Json | null
           id?: string
           notes?: string | null
           platform?: string
           priority?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
+          transcript?: string | null
           tweet_url?: string
           updated_at?: string
           user_id?: string
