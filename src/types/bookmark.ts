@@ -2,6 +2,12 @@ export type Platform = 'twitter' | 'youtube' | 'linkedin';
 
 export type Priority = 'normal' | 'important' | 'pinned' | 'reference';
 
+export interface Highlight {
+  timestamp: string;
+  title: string;
+  summary: string;
+}
+
 export interface Bookmark {
   id: string;
   tweet_url: string;
@@ -14,6 +20,12 @@ export interface Bookmark {
   notes?: string | null;
   priority?: Priority;
   platform: Platform;
+  // Multi-modal archiving fields
+  thumbnail_url?: string | null;
+  duration?: string | null;
+  highlights?: Highlight[] | null;
+  transcript?: string | null;
+  archived_at?: string | null;
 }
 
 export interface Folder {

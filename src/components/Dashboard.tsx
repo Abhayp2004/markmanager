@@ -22,7 +22,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { Platform, PLATFORM_CONFIG, Bookmark as BookmarkType, Folder } from "@/types/bookmark";
+import { Platform, PLATFORM_CONFIG, Bookmark as BookmarkType, Folder, Highlight } from "@/types/bookmark";
+
+// Helper to parse highlights from JSON
+const parseBookmarks = (data: any[]): BookmarkType[] => {
+  return data.map(item => ({
+    ...item,
+    highlights: Array.isArray(item.highlights) ? item.highlights as Highlight[] : [],
+  }));
+};
 
 const priorityOrder: Record<string, number> = {
   pinned: 0,
@@ -78,7 +86,7 @@ export function Dashboard() {
     }
 
     const { data } = await query;
-    setBookmarks((data as BookmarkType[]) || []);
+    setBookmarks(data ? parseBookmarks(data) : []);
     setIsLoading(false);
   };
 
@@ -150,6 +158,12 @@ export function Dashboard() {
     );
   };
 
+  const handleUpdateHighlights = (id: string, highlights: Highlight[]) => {
+    setBookmarks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, highlights, archived_at: new Date().toISOString() } : b))
+    );
+  };
+
   const handleTagClick = (tag: string) => {
     setSelectedTag((prev) => (prev === tag ? null : tag));
   };
@@ -201,7 +215,7 @@ export function Dashboard() {
 
     switch (bookmark.platform) {
       case 'youtube':
-        return <YouTubeCard {...commonProps} />;
+        return <YouTubeCard {...commonProps} onUpdateHighlights={handleUpdateHighlights} />;
       case 'linkedin':
         return <LinkedInCard {...commonProps} />;
       default:

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
+import { ExpandableHighlights } from '@/components/ExpandableHighlights';
 import {
   MoreHorizontal,
   Trash2,
@@ -13,6 +14,7 @@ import {
   Check,
   X,
   Play,
+  Clock,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,7 +24,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { Bookmark, Folder, extractVideoId } from '@/types/bookmark';
+import { Bookmark, Folder, Highlight, extractVideoId } from '@/types/bookmark';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface YouTubeCardProps {
   bookmark: Bookmark;
@@ -35,6 +39,7 @@ interface YouTubeCardProps {
     id: string,
     priority: 'important' | 'pinned' | 'reference' | 'normal'
   ) => void;
+  onUpdateHighlights?: (id: string, highlights: Highlight[]) => void;
 }
 
 export function YouTubeCard({
@@ -45,15 +50,18 @@ export function YouTubeCard({
   onTagClick,
   onUpdateNotes,
   onUpdatePriority,
+  onUpdateHighlights,
 }: YouTubeCardProps) {
+  const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(bookmark.notes || '');
+  const [isGeneratingHighlights, setIsGeneratingHighlights] = useState(false);
 
   const videoId = extractVideoId(bookmark.tweet_url);
-  const thumbnailUrl = videoId
-    ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
-    : null;
+  const thumbnailUrl = bookmark.thumbnail_url || (videoId
+    ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+    : null);
 
   const handleSaveNotes = () => {
     onUpdateNotes?.(bookmark.id, notesValue);
@@ -63,6 +71,50 @@ export function YouTubeCard({
   const handleCancelNotes = () => {
     setNotesValue(bookmark.notes || '');
     setIsEditingNotes(false);
+  };
+
+  const handleGenerateHighlights = async () => {
+    setIsGeneratingHighlights(true);
+    try {
+      const response = await supabase.functions.invoke('archive-content', {
+        body: {
+          url: bookmark.tweet_url,
+          platform: 'youtube',
+          generateHighlightsFlag: true,
+        },
+      });
+
+      if (response.data?.success && response.data.data) {
+        const { highlights, summary } = response.data.data;
+        
+        // Update bookmark in database
+        const { error } = await supabase
+          .from('bookmarks')
+          .update({
+            highlights: highlights || [],
+            archived_at: new Date().toISOString(),
+          })
+          .eq('id', bookmark.id);
+
+        if (error) throw error;
+
+        onUpdateHighlights?.(bookmark.id, highlights || []);
+        
+        toast({
+          title: 'Highlights generated',
+          description: `Found ${highlights?.length || 0} key moments`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to generate highlights:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate highlights. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingHighlights(false);
+    }
   };
 
   const tags = bookmark.tags || [];
@@ -299,6 +351,15 @@ export function YouTubeCard({
         </div>
       )}
 
+      {/* Expandable Highlights */}
+      <ExpandableHighlights
+        highlights={bookmark.highlights || []}
+        transcript={bookmark.transcript || undefined}
+        isLoading={isGeneratingHighlights}
+        onGenerateHighlights={handleGenerateHighlights}
+        videoUrl={bookmark.tweet_url}
+      />
+
       {/* Add note */}
       {!bookmark.notes && !isEditingNotes && (
         <button
@@ -311,7 +372,7 @@ export function YouTubeCard({
       )}
 
       {/* Footer */}
-      <div className="border-t border-border px-4 py-2 bg-secondary/30">
+      <div className="border-t border-border px-4 py-2 bg-secondary/30 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Saved{' '}
           {new Date(bookmark.created_at).toLocaleDateString('en-US', {
@@ -320,6 +381,12 @@ export function YouTubeCard({
             year: 'numeric',
           })}
         </p>
+        {bookmark.duration && (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {bookmark.duration}
+          </span>
+        )}
       </div>
     </div>
   );
