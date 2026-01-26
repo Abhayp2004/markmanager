@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
@@ -8,11 +8,11 @@ import {
   FolderInput,
   ExternalLink,
   Link as LinkIcon,
-  Sparkles,
   StickyNote,
   Pencil,
   Check,
   X,
+  Play,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,15 +22,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { Bookmark, Folder } from '@/types/bookmark';
+import { Bookmark, Folder, extractVideoId } from '@/types/bookmark';
 
-interface BookmarkCardProps {
+interface YouTubeCardProps {
   bookmark: Bookmark;
   folders: Folder[];
   onDelete: (id: string) => void;
   onMove: (id: string, folderId: string | null) => void;
   onTagClick?: (tag: string) => void;
-  onRetag?: (bookmark: Bookmark) => void;
   onUpdateNotes?: (id: string, notes: string) => void;
   onUpdatePriority?: (
     id: string,
@@ -38,40 +37,23 @@ interface BookmarkCardProps {
   ) => void;
 }
 
-export function BookmarkCard({
+export function YouTubeCard({
   bookmark,
   folders,
   onDelete,
   onMove,
   onTagClick,
-  onRetag,
   onUpdateNotes,
   onUpdatePriority,
-}: BookmarkCardProps) {
+}: YouTubeCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(bookmark.notes || '');
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (bookmark.embed_html && containerRef.current) {
-      containerRef.current.innerHTML = bookmark.embed_html;
-
-      const script = document.createElement('script');
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      script.charset = 'utf-8';
-      document.body.appendChild(script);
-
-      return () => {
-        document
-          .querySelectorAll(
-            'script[src*="platform.twitter.com/widgets.js"]'
-          )
-          .forEach((s) => s.remove());
-      };
-    }
-  }, [bookmark.embed_html]);
+  const videoId = extractVideoId(bookmark.tweet_url);
+  const thumbnailUrl = videoId
+    ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+    : null;
 
   const handleSaveNotes = () => {
     onUpdateNotes?.(bookmark.id, notesValue);
@@ -94,7 +76,7 @@ export function BookmarkCard({
         bookmark.priority === 'important' && 'border-orange-400/60',
         bookmark.priority === 'reference' && 'border-blue-400/60',
         (!bookmark.priority || bookmark.priority === 'normal') &&
-          'border-border hover:border-primary/30'
+          'border-border hover:border-red-500/30'
       )}
     >
       {/* Priority badge */}
@@ -128,7 +110,7 @@ export function BookmarkCard({
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="h-4 w-4" />
-                Open on X
+                Open on YouTube
               </a>
             </DropdownMenuItem>
 
@@ -141,13 +123,6 @@ export function BookmarkCard({
               Copy link
             </DropdownMenuItem>
 
-            {onRetag && (
-              <DropdownMenuItem onClick={() => onRetag(bookmark)}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Re-analyze tags
-              </DropdownMenuItem>
-            )}
-
             {/* Priority section */}
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
@@ -155,34 +130,26 @@ export function BookmarkCard({
             </div>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'important')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'important')}
             >
               ⭐ Mark as Important
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'pinned')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'pinned')}
             >
               📌 Pin
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'reference')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'reference')}
             >
               🔖 Mark as Reference
             </DropdownMenuItem>
 
             {bookmark.priority !== 'normal' && (
               <DropdownMenuItem
-                onClick={() =>
-                  onUpdatePriority?.(bookmark.id, 'normal')
-                }
+                onClick={() => onUpdatePriority?.(bookmark.id, 'normal')}
                 className="text-muted-foreground"
               >
                 Remove priority
@@ -199,9 +166,7 @@ export function BookmarkCard({
                 </div>
 
                 {bookmark.folder_id && (
-                  <DropdownMenuItem
-                    onClick={() => onMove(bookmark.id, null)}
-                  >
+                  <DropdownMenuItem onClick={() => onMove(bookmark.id, null)}>
                     <FolderInput className="h-4 w-4 mr-2" />
                     Remove from folder
                   </DropdownMenuItem>
@@ -212,9 +177,7 @@ export function BookmarkCard({
                   .map((folder) => (
                     <DropdownMenuItem
                       key={folder.id}
-                      onClick={() =>
-                        onMove(bookmark.id, folder.id)
-                      }
+                      onClick={() => onMove(bookmark.id, folder.id)}
                     >
                       <FolderInput className="h-4 w-4 mr-2" />
                       {folder.name}
@@ -250,20 +213,43 @@ export function BookmarkCard({
         </div>
       )}
 
-      {/* Tweet embed */}
-      {bookmark.embed_html ? (
-        <div
-          ref={containerRef}
-          className="min-h-[200px] p-3 sm:p-4 [&_.twitter-tweet]:!my-0 [&_.twitter-tweet]:!mx-auto"
-        />
+      {/* YouTube Thumbnail */}
+      {thumbnailUrl ? (
+        <a
+          href={bookmark.tweet_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block relative group/thumb"
+        >
+          <div className="relative aspect-video m-3 rounded-lg overflow-hidden bg-secondary">
+            <img
+              src={thumbnailUrl}
+              alt={bookmark.content || 'YouTube video'}
+              className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+              <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center">
+                <Play className="h-7 w-7 text-white ml-1" fill="white" />
+              </div>
+            </div>
+          </div>
+          {bookmark.content && (
+            <p className="px-4 pb-3 text-sm font-medium line-clamp-2">
+              {bookmark.content}
+            </p>
+          )}
+          {bookmark.author_name && (
+            <p className="px-4 pb-3 text-xs text-muted-foreground">
+              {bookmark.author_name}
+            </p>
+          )}
+        </a>
       ) : (
         <div className="p-4">
           <div className="flex flex-col gap-3 rounded-lg bg-secondary/50 p-4">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <LinkIcon className="h-4 w-4" />
-              <span className="text-sm">
-                Tweet preview unavailable
-              </span>
+              <Play className="h-4 w-4 text-red-500" />
+              <span className="text-sm">YouTube Video</span>
             </div>
             <a
               href={bookmark.tweet_url}
@@ -273,11 +259,6 @@ export function BookmarkCard({
             >
               {bookmark.tweet_url}
             </a>
-            {bookmark.author_name && (
-              <p className="text-sm text-muted-foreground">
-                By {bookmark.author_name}
-              </p>
-            )}
           </div>
         </div>
       )}
@@ -289,19 +270,13 @@ export function BookmarkCard({
             <div className="space-y-2">
               <Textarea
                 value={notesValue}
-                onChange={(e) =>
-                  setNotesValue(e.target.value)
-                }
+                onChange={(e) => setNotesValue(e.target.value)}
                 placeholder="Why did you save this? Add context..."
                 className="min-h-[60px] bg-background text-sm resize-none"
                 autoFocus
               />
               <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelNotes}
-                >
+                <Button size="sm" variant="ghost" onClick={handleCancelNotes}>
                   <X className="h-3 w-3 mr-1" /> Cancel
                 </Button>
                 <Button size="sm" onClick={handleSaveNotes}>
@@ -339,14 +314,11 @@ export function BookmarkCard({
       <div className="border-t border-border px-4 py-2 bg-secondary/30">
         <p className="text-xs text-muted-foreground">
           Saved{' '}
-          {new Date(bookmark.created_at).toLocaleDateString(
-            'en-US',
-            {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }
-          )}
+          {new Date(bookmark.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
@@ -8,11 +8,11 @@ import {
   FolderInput,
   ExternalLink,
   Link as LinkIcon,
-  Sparkles,
   StickyNote,
   Pencil,
   Check,
   X,
+  Briefcase,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,13 +24,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Bookmark, Folder } from '@/types/bookmark';
 
-interface BookmarkCardProps {
+interface LinkedInCardProps {
   bookmark: Bookmark;
   folders: Folder[];
   onDelete: (id: string) => void;
   onMove: (id: string, folderId: string | null) => void;
   onTagClick?: (tag: string) => void;
-  onRetag?: (bookmark: Bookmark) => void;
   onUpdateNotes?: (id: string, notes: string) => void;
   onUpdatePriority?: (
     id: string,
@@ -38,40 +37,18 @@ interface BookmarkCardProps {
   ) => void;
 }
 
-export function BookmarkCard({
+export function LinkedInCard({
   bookmark,
   folders,
   onDelete,
   onMove,
   onTagClick,
-  onRetag,
   onUpdateNotes,
   onUpdatePriority,
-}: BookmarkCardProps) {
+}: LinkedInCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(bookmark.notes || '');
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (bookmark.embed_html && containerRef.current) {
-      containerRef.current.innerHTML = bookmark.embed_html;
-
-      const script = document.createElement('script');
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      script.charset = 'utf-8';
-      document.body.appendChild(script);
-
-      return () => {
-        document
-          .querySelectorAll(
-            'script[src*="platform.twitter.com/widgets.js"]'
-          )
-          .forEach((s) => s.remove());
-      };
-    }
-  }, [bookmark.embed_html]);
 
   const handleSaveNotes = () => {
     onUpdateNotes?.(bookmark.id, notesValue);
@@ -94,7 +71,7 @@ export function BookmarkCard({
         bookmark.priority === 'important' && 'border-orange-400/60',
         bookmark.priority === 'reference' && 'border-blue-400/60',
         (!bookmark.priority || bookmark.priority === 'normal') &&
-          'border-border hover:border-primary/30'
+          'border-border hover:border-blue-600/30'
       )}
     >
       {/* Priority badge */}
@@ -128,25 +105,16 @@ export function BookmarkCard({
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="h-4 w-4" />
-                Open on X
+                Open on LinkedIn
               </a>
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onClick={() =>
-                navigator.clipboard.writeText(bookmark.tweet_url)
-              }
+              onClick={() => navigator.clipboard.writeText(bookmark.tweet_url)}
             >
               <LinkIcon className="h-4 w-4 mr-2" />
               Copy link
             </DropdownMenuItem>
-
-            {onRetag && (
-              <DropdownMenuItem onClick={() => onRetag(bookmark)}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Re-analyze tags
-              </DropdownMenuItem>
-            )}
 
             {/* Priority section */}
             <DropdownMenuSeparator />
@@ -155,34 +123,26 @@ export function BookmarkCard({
             </div>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'important')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'important')}
             >
               ⭐ Mark as Important
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'pinned')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'pinned')}
             >
               📌 Pin
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onClick={() =>
-                onUpdatePriority?.(bookmark.id, 'reference')
-              }
+              onClick={() => onUpdatePriority?.(bookmark.id, 'reference')}
             >
               🔖 Mark as Reference
             </DropdownMenuItem>
 
             {bookmark.priority !== 'normal' && (
               <DropdownMenuItem
-                onClick={() =>
-                  onUpdatePriority?.(bookmark.id, 'normal')
-                }
+                onClick={() => onUpdatePriority?.(bookmark.id, 'normal')}
                 className="text-muted-foreground"
               >
                 Remove priority
@@ -199,9 +159,7 @@ export function BookmarkCard({
                 </div>
 
                 {bookmark.folder_id && (
-                  <DropdownMenuItem
-                    onClick={() => onMove(bookmark.id, null)}
-                  >
+                  <DropdownMenuItem onClick={() => onMove(bookmark.id, null)}>
                     <FolderInput className="h-4 w-4 mr-2" />
                     Remove from folder
                   </DropdownMenuItem>
@@ -212,9 +170,7 @@ export function BookmarkCard({
                   .map((folder) => (
                     <DropdownMenuItem
                       key={folder.id}
-                      onClick={() =>
-                        onMove(bookmark.id, folder.id)
-                      }
+                      onClick={() => onMove(bookmark.id, folder.id)}
                     >
                       <FolderInput className="h-4 w-4 mr-2" />
                       {folder.name}
@@ -250,37 +206,39 @@ export function BookmarkCard({
         </div>
       )}
 
-      {/* Tweet embed */}
-      {bookmark.embed_html ? (
-        <div
-          ref={containerRef}
-          className="min-h-[200px] p-3 sm:p-4 [&_.twitter-tweet]:!my-0 [&_.twitter-tweet]:!mx-auto"
-        />
-      ) : (
-        <div className="p-4">
-          <div className="flex flex-col gap-3 rounded-lg bg-secondary/50 p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <LinkIcon className="h-4 w-4" />
-              <span className="text-sm">
-                Tweet preview unavailable
-              </span>
+      {/* LinkedIn Content */}
+      <div className="p-4">
+        <div className="flex flex-col gap-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 border border-blue-500/20">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
+              <Briefcase className="h-4 w-4 text-white" />
             </div>
-            <a
-              href={bookmark.tweet_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline truncate"
-            >
-              {bookmark.tweet_url}
-            </a>
-            {bookmark.author_name && (
-              <p className="text-sm text-muted-foreground">
-                By {bookmark.author_name}
-              </p>
-            )}
+            <span className="text-sm font-medium">LinkedIn Post</span>
           </div>
+          
+          {bookmark.content && (
+            <p className="text-sm text-muted-foreground line-clamp-4">
+              {bookmark.content}
+            </p>
+          )}
+          
+          {bookmark.author_name && (
+            <p className="text-xs text-muted-foreground">
+              By {bookmark.author_name}
+            </p>
+          )}
+          
+          <a
+            href={bookmark.tweet_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-500 hover:underline flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View on LinkedIn
+          </a>
         </div>
-      )}
+      </div>
 
       {/* Notes */}
       {(bookmark.notes || isEditingNotes) && (
@@ -289,19 +247,13 @@ export function BookmarkCard({
             <div className="space-y-2">
               <Textarea
                 value={notesValue}
-                onChange={(e) =>
-                  setNotesValue(e.target.value)
-                }
+                onChange={(e) => setNotesValue(e.target.value)}
                 placeholder="Why did you save this? Add context..."
                 className="min-h-[60px] bg-background text-sm resize-none"
                 autoFocus
               />
               <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelNotes}
-                >
+                <Button size="sm" variant="ghost" onClick={handleCancelNotes}>
                   <X className="h-3 w-3 mr-1" /> Cancel
                 </Button>
                 <Button size="sm" onClick={handleSaveNotes}>
@@ -339,14 +291,11 @@ export function BookmarkCard({
       <div className="border-t border-border px-4 py-2 bg-secondary/30">
         <p className="text-xs text-muted-foreground">
           Saved{' '}
-          {new Date(bookmark.created_at).toLocaleDateString(
-            'en-US',
-            {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }
-          )}
+          {new Date(bookmark.created_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </p>
       </div>
     </div>

@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
+import { YouTubeCard } from "@/components/YouTubeCard";
+import { LinkedInCard } from "@/components/LinkedInCard";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { TagBadge } from "@/components/TagBadge";
 import { Button } from "@/components/ui/button";
@@ -10,39 +12,29 @@ import {
   Search,
   Bookmark,
   Loader2,
-  Sparkles,
   X,
   Menu,
+  Play,
+  Briefcase,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-
-interface Folder {
-  id: string;
-  name: string;
-}
-
-interface BookmarkType {
-  id: string;
-  tweet_url: string;
-  embed_html: string | null;
-  author_name: string | null;
-  folder_id: string | null;
-  created_at: string;
-  tags?: string[];
-  content?: string | null;
-  notes?: string | null;
-  priority?: "normal" | "important" | "pinned" | "reference";
-}
+import { Platform, PLATFORM_CONFIG, Bookmark as BookmarkType, Folder } from "@/types/bookmark";
 
 const priorityOrder: Record<string, number> = {
   pinned: 0,
   important: 1,
   reference: 2,
   normal: 3,
+};
+
+const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
+  twitter: <span className="text-xl">𝕏</span>,
+  youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
+  linkedin: <Briefcase className="h-6 w-6 text-blue-600" />,
 };
 
 export function Dashboard() {
@@ -53,6 +45,7 @@ export function Dashboard() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('twitter');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<
     "all" | "pinned" | "important" | "reference"
@@ -60,8 +53,6 @@ export function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSemanticSearching, setIsSemanticSearching] = useState(false);
-  const [semanticResults, setSemanticResults] = useState<string[] | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchFolders = async () => {
@@ -79,6 +70,7 @@ export function Dashboard() {
     let query = supabase
       .from("bookmarks")
       .select("*")
+      .eq("platform", selectedPlatform)
       .order("created_at", { ascending: false });
 
     if (selectedFolder) {
@@ -96,15 +88,14 @@ export function Dashboard() {
 
   useEffect(() => {
     setIsLoading(true);
-    setSemanticResults(null);
+    setSelectedTag(null);
     fetchBookmarks();
-  }, [user, selectedFolder]);
+  }, [user, selectedFolder, selectedPlatform]);
 
   const updatePriority = async (
     id: string,
     priority: "important" | "pinned" | "reference" | "normal"
   ) => {
-    // Limit pinned bookmarks to 3
     if (priority === "pinned") {
       const pinnedCount = bookmarks.filter((b) => b.priority === "pinned").length;
       const isAlreadyPinned = bookmarks.find((b) => b.id === id)?.priority === "pinned";
@@ -161,7 +152,6 @@ export function Dashboard() {
 
   const handleTagClick = (tag: string) => {
     setSelectedTag((prev) => (prev === tag ? null : tag));
-    setSemanticResults(null);
   };
 
   const getFilteredBookmarks = () => {
@@ -195,13 +185,38 @@ export function Dashboard() {
 
   const filteredBookmarks = getFilteredBookmarks();
   const usedTags = [...new Set(bookmarks.flatMap((b) => b.tags || []))];
+  const platformConfig = PLATFORM_CONFIG[selectedPlatform];
+
+  const renderBookmarkCard = (bookmark: BookmarkType) => {
+    const commonProps = {
+      key: bookmark.id,
+      bookmark,
+      folders,
+      onDelete: handleDeleteBookmark,
+      onMove: handleMoveBookmark,
+      onTagClick: handleTagClick,
+      onUpdateNotes: handleUpdateNotes,
+      onUpdatePriority: updatePriority,
+    };
+
+    switch (bookmark.platform) {
+      case 'youtube':
+        return <YouTubeCard {...commonProps} />;
+      case 'linkedin':
+        return <LinkedInCard {...commonProps} />;
+      default:
+        return <BookmarkCard {...commonProps} />;
+    }
+  };
 
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
         folders={folders}
         selectedFolder={selectedFolder}
+        selectedPlatform={selectedPlatform}
         onSelectFolder={setSelectedFolder}
+        onSelectPlatform={setSelectedPlatform}
         onFolderCreated={fetchFolders}
         isOpen={isMobile ? isSidebarOpen : true}
         onClose={() => setIsSidebarOpen(false)}
@@ -223,8 +238,8 @@ export function Dashboard() {
                 </Button>
               )}
               <div className="flex items-center gap-2">
-                <Bookmark className="h-6 w-6 text-primary" />
-                <h1 className="text-xl font-bold">Bookmarks</h1>
+                {PLATFORM_HEADER_ICONS[selectedPlatform]}
+                <h1 className="text-xl font-bold">{platformConfig.label} Bookmarks</h1>
               </div>
             </div>
 
@@ -311,22 +326,19 @@ export function Dashboard() {
             </div>
           ) : filteredBookmarks.length > 0 ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredBookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  folders={folders}
-                  onDelete={handleDeleteBookmark}
-                  onMove={handleMoveBookmark}
-                  onTagClick={handleTagClick}
-                  onUpdateNotes={handleUpdateNotes}
-                  onUpdatePriority={updatePriority}
-                />
-              ))}
+              {filteredBookmarks.map(renderBookmarkCard)}
             </div>
           ) : (
             <div className="text-center text-muted-foreground mt-20">
-              No bookmarks found
+              <p>No {platformConfig.label} bookmarks found</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add your first {platformConfig.label} bookmark
+              </Button>
             </div>
           )}
         </div>
@@ -336,6 +348,7 @@ export function Dashboard() {
           onOpenChange={setIsAddModalOpen}
           folders={folders}
           selectedFolder={selectedFolder}
+          selectedPlatform={selectedPlatform}
           onBookmarkAdded={fetchBookmarks}
         />
       </main>

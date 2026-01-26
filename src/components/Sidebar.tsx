@@ -8,32 +8,45 @@ import {
   LogOut, 
   ChevronRight,
   X,
-  Loader2
+  Loader2,
+  Play,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Platform, PLATFORM_CONFIG } from '@/types/bookmark';
 
-interface Folder {
+interface FolderType {
   id: string;
   name: string;
 }
 
 interface SidebarProps {
-  folders: Folder[];
+  folders: FolderType[];
   selectedFolder: string | null;
+  selectedPlatform: Platform;
   onSelectFolder: (folderId: string | null) => void;
+  onSelectPlatform: (platform: Platform) => void;
   onFolderCreated: () => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
+const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
+  twitter: <span className="text-base">𝕏</span>,
+  youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
+  linkedin: <Briefcase className="h-4 w-4 text-blue-600" />,
+};
+
 export function Sidebar({ 
   folders, 
-  selectedFolder, 
+  selectedFolder,
+  selectedPlatform,
   onSelectFolder,
+  onSelectPlatform,
   onFolderCreated,
   isOpen = true,
   onClose
@@ -48,6 +61,14 @@ export function Sidebar({
 
   const handleSelectFolder = (folderId: string | null) => {
     onSelectFolder(folderId);
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
+  const handleSelectPlatform = (platform: Platform) => {
+    onSelectPlatform(platform);
+    onSelectFolder(null); // Reset folder when changing platform
     if (isMobile && onClose) {
       onClose();
     }
@@ -85,8 +106,6 @@ export function Sidebar({
     e?.preventDefault();
     e?.stopPropagation();
 
-    // Helps debug "tap doesn't trigger" issues on some mobile browsers.
-    // eslint-disable-next-line no-console
     console.log('[auth] signOut pressed');
 
     if (isSigningOut) return;
@@ -95,8 +114,6 @@ export function Sidebar({
     try {
       await signOut();
       if (isMobile && onClose) onClose();
-
-      // Force navigation to ensure UI updates even if the auth event is delayed.
       window.location.assign('/auth');
     } catch (err) {
       toast({
@@ -140,7 +157,7 @@ export function Sidebar({
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Bookmark className="h-5 w-5 text-primary" />
           </div>
-          <span className="font-semibold text-foreground">X Bookmarks</span>
+          <span className="font-semibold text-foreground">Bookmarks</span>
           {isMobile && onClose && (
             <Button
               variant="ghost"
@@ -165,6 +182,32 @@ export function Sidebar({
           overflowX: 'hidden'
         }}
       >
+        {/* Platforms Section */}
+        <div className="mb-4">
+          <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Platforms
+          </div>
+          
+          <div className="space-y-1">
+            {(Object.keys(PLATFORM_CONFIG) as Platform[]).map((platform) => (
+              <button
+                key={platform}
+                onClick={() => handleSelectPlatform(platform)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  selectedPlatform === platform
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                )}
+              >
+                {PLATFORM_ICONS[platform]}
+                {PLATFORM_CONFIG[platform].label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Collections */}
         <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Collections
         </div>
@@ -180,7 +223,7 @@ export function Sidebar({
           )}
         >
           <Bookmark className="h-4 w-4" />
-          All Bookmarks
+          All {PLATFORM_CONFIG[selectedPlatform].label}
         </button>
 
         {/* Folders */}
