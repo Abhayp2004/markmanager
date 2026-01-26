@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Bookmark, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Layers } from 'lucide-react';
 import { z } from 'zod';
+import { GeometricBackground } from '@/components/GeometricBackground';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -23,8 +24,11 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center ocean-gradient-bg">
+        <div className="relative">
+          <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full animate-pulse" />
+          <Loader2 className="relative h-10 w-10 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
@@ -76,45 +80,50 @@ export default function Auth() {
     }
   };
 
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      {/* Background glow effect */}
+    <div className="relative flex min-h-screen items-center justify-center ocean-gradient-bg p-4 overflow-hidden">
+      {/* Three.js Background */}
+      <GeometricBackground />
+
+      {/* Ambient glow effects */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-1/4 -translate-x-1/2 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-primary/8 blur-[120px]" />
+        <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-accent/6 blur-[100px]" />
       </div>
 
-      <div className="relative w-full max-w-md animate-fade-in">
+      <div className="relative z-10 w-full max-w-md">
         {/* Logo and header */}
-        <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-            <Bookmark className="h-8 w-8 text-primary" />
+        <div className="mb-8 text-center animate-fade-in">
+          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl glass-card-elevated glow-ring">
+            <Layers className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            X Bookmarks Manager
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            Bookmark<span className="text-gradient">Hub</span>
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Organize your favorite tweets in one place
+          <p className="mt-3 text-muted-foreground text-lg">
+            Your unified bookmark manager
           </p>
         </div>
 
         {/* Auth form */}
-        <div className="glass-card rounded-2xl p-8 shadow-card">
+        <div 
+          className="glass-card-elevated rounded-3xl p-8 animate-fade-in"
+          style={{ animationDelay: '0.1s' }}
+        >
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground">
-              {isLogin ? 'Welcome back' : 'Create account'}
+            <h2 className="text-2xl font-semibold text-foreground">
+              {isLogin ? 'Welcome back' : 'Get started'}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               {isLogin
                 ? 'Sign in to access your bookmarks'
-                : 'Get started with your bookmark collection'}
+                : 'Create your account in seconds'}
             </p>
           </div>
 
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
+              <Label htmlFor="email" className="text-foreground font-medium">
                 Email
               </Label>
               <Input
@@ -123,13 +132,13 @@ export default function Auth() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 bg-secondary border-border focus:ring-primary"
+                className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/30 rounded-xl transition-all duration-200"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">
+              <Label htmlFor="password" className="text-foreground font-medium">
                 Password
               </Label>
               <Input
@@ -138,23 +147,22 @@ export default function Auth() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 bg-secondary border-border focus:ring-primary"
+                className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/30 rounded-xl transition-all duration-200"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-11"
-              variant="glow"
+              className="w-full h-12 rounded-xl text-base font-semibold gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
                   {isLogin ? 'Sign In' : 'Create Account'}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </Button>
@@ -164,7 +172,7 @@ export default function Auth() {
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
@@ -174,14 +182,17 @@ export default function Auth() {
         </div>
 
         {/* Creator credit */}
-        <footer className="border-t border-border px-6 py-3 shrink-0 mt-6">
-          <p className="text-sm text-muted-foreground text-center">
+        <footer 
+          className="mt-8 text-center animate-fade-in"
+          style={{ animationDelay: '0.2s' }}
+        >
+          <p className="text-sm text-muted-foreground/70">
             Created by{" "}
             <a
               href="https://x.com/abhxy03"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
+              className="text-primary/80 hover:text-primary transition-colors font-medium"
             >
               Abhay Parekh
             </a>
