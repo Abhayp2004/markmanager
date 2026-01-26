@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ import { Loader2, Plus, Link, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Platform, Priority, PLATFORM_CONFIG, detectPlatform, extractVideoId } from '@/types/bookmark';
 
 interface Folder {
   id: string;
@@ -31,16 +32,16 @@ interface AddBookmarkModalProps {
   onOpenChange: (open: boolean) => void;
   folders: Folder[];
   selectedFolder: string | null;
+  selectedPlatform: Platform;
   onBookmarkAdded: () => void;
 }
-
-type Priority = 'normal' | 'important' | 'pinned' | 'reference';
 
 export function AddBookmarkModal({
   open,
   onOpenChange,
   folders,
   selectedFolder,
+  selectedPlatform,
   onBookmarkAdded,
 }: AddBookmarkModalProps) {
   const { user } = useAuth();
@@ -50,6 +51,10 @@ export function AddBookmarkModal({
   const [folderId, setFolderId] = useState<string | null>(selectedFolder);
   const [priority, setPriority] = useState<Priority>('normal');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setFolderId(selectedFolder);
+  }, [selectedFolder]);
 
   const extractTweetId = (url: string): string | null => {
     const patterns = [
@@ -74,11 +79,14 @@ export function AddBookmarkModal({
     e.preventDefault();
     if (!url.trim() || !user) return;
 
-    const tweetId = extractTweetId(url.trim());
-    if (!tweetId) {
+    const trimmedUrl = url.trim();
+    const detectedPlatform = detectPlatform(trimmedUrl);
+
+    // Validate URL matches selected platform
+    if (detectedPlatform !== selectedPlatform) {
       toast({
         title: 'Invalid URL',
-        description: 'Please enter a valid X/Twitter post URL',
+        description: `Please enter a valid ${PLATFORM_CONFIG[selectedPlatform].label} URL`,
         variant: 'destructive',
       });
       return;
@@ -87,28 +95,59 @@ export function AddBookmarkModal({
     setIsLoading(true);
 
     try {
-      const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(
-        url.trim()
-      )}&omit_script=true`;
-
       let embedHtml: string | null = null;
       let authorName: string | null = null;
       let authorUrl: string | null = null;
-      let tweetContent = '';
+      let content = '';
 
-      try {
-        const response = await fetch(oembedUrl);
-        if (response.ok) {
-          const data = await response.json();
-          embedHtml = data.html;
-          authorName = data.author_name;
-          authorUrl = data.author_url;
-          tweetContent = extractTextFromHtml(data.html);
+      if (selectedPlatform === 'twitter') {
+        const tweetId = extractTweetId(trimmedUrl);
+        if (!tweetId) {
+          toast({
+            title: 'Invalid URL',
+            description: 'Please enter a valid X/Twitter post URL',
+            variant: 'destructive',
+          });
+          setIsLoading(false);
+          return;
         }
-      } catch {
-        console.log('oEmbed fetch failed');
+
+        // Fetch Twitter oEmbed
+        try {
+          const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(trimmedUrl)}&omit_script=true`;
+          const response = await fetch(oembedUrl);
+          if (response.ok) {
+            const data = await response.json();
+            embedHtml = data.html;
+            authorName = data.author_name;
+            authorUrl = data.author_url;
+            content = extractTextFromHtml(data.html);
+          }
+        } catch {
+          console.log('oEmbed fetch failed');
+        }
+      } else if (selectedPlatform === 'youtube') {
+        const videoId = extractVideoId(trimmedUrl);
+        if (videoId) {
+          // For YouTube, we'll use the video ID for thumbnail
+          // Try to get video info via noembed
+          try {
+            const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
+            if (response.ok) {
+              const data = await response.json();
+              content = data.title || '';
+              authorName = data.author_name || '';
+            }
+          } catch {
+            console.log('noembed fetch failed');
+          }
+        }
+      } else if (selectedPlatform === 'linkedin') {
+        // LinkedIn has limited public API, just store the URL
+        content = 'LinkedIn Post';
       }
 
+      // AI tagging
       let tags: string[] = [];
       let summary = '';
 
@@ -116,8 +155,8 @@ export function AddBookmarkModal({
         const aiResponse = await supabase.functions.invoke('ai-bookmarks', {
           body: {
             action: 'analyze',
-            content: tweetContent,
-            tweetUrl: url.trim(),
+            content: content,
+            tweetUrl: trimmedUrl,
           },
         });
 
@@ -131,24 +170,24 @@ export function AddBookmarkModal({
 
       const { error } = await supabase.from('bookmarks').insert({
         user_id: user.id,
-        tweet_url: url.trim(),
+        tweet_url: trimmedUrl,
         folder_id: folderId || null,
         embed_html: embedHtml,
         author_name: authorName,
         author_url: authorUrl,
         tags: tags.length > 0 ? tags : ['other'],
-        content: tweetContent || summary,
-        priority, // ✅ NEW
+        content: content || summary,
+        priority,
+        platform: selectedPlatform,
       });
 
       if (error) throw error;
 
       toast({
         title: 'Bookmark saved',
-        description:
-          priority !== 'normal'
-            ? `Saved as ${priority}`
-            : 'Your tweet has been bookmarked',
+        description: priority !== 'normal'
+          ? `Saved as ${priority}`
+          : `Your ${PLATFORM_CONFIG[selectedPlatform].label} bookmark has been saved`,
       });
 
       setUrl('');
@@ -167,13 +206,15 @@ export function AddBookmarkModal({
     }
   };
 
+  const platformConfig = PLATFORM_CONFIG[selectedPlatform];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5 text-primary" />
-            Add Bookmark
+            Add {platformConfig.label} Bookmark
           </DialogTitle>
           <DialogDescription className="flex items-center gap-1">
             <Sparkles className="h-3 w-3 text-primary" />
@@ -184,13 +225,13 @@ export function AddBookmarkModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* URL */}
           <div className="space-y-2">
-            <Label>Tweet URL</Label>
+            <Label>{platformConfig.label} URL</Label>
             <div className="relative">
               <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://x.com/user/status/123..."
+                placeholder={platformConfig.placeholder}
                 className="pl-10 h-11 bg-secondary"
                 required
               />
