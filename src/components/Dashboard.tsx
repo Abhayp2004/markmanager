@@ -254,7 +254,7 @@ export function Dashboard() {
               <div className="flex items-center gap-2">
                 {PLATFORM_HEADER_ICONS[selectedPlatform]}
                 <h1 className="text-xl font-bold">
-                  <span className="text-gradient">Bookmark</span>Hub — {platformConfig.label}
+                  <span className="text-gradient">Mark</span><span className="font-light italic tracking-wide">Manager</span> — {platformConfig.label}
                 </h1>
               </div>
             </div>
