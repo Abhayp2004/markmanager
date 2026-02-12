@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Bookmark, Folder } from '@/types/bookmark';
+import { SummarizeButton } from '@/components/SummarizeButton';
 
 interface LinkedInCardProps {
   bookmark: Bookmark;
@@ -275,6 +276,15 @@ export function LinkedInCard({
           )}
         </div>
       )}
+
+      {/* Summarize */}
+      <SummarizeButton
+        bookmarkId={bookmark.id}
+        content={bookmark.content}
+        url={bookmark.tweet_url}
+        platform={bookmark.platform}
+        existingSummary={null}
+      />
 
       {/* Add note */}
       {!bookmark.notes && !isEditingNotes && (

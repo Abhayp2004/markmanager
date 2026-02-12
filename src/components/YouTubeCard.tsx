@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Bookmark, Folder, Highlight, extractVideoId } from '@/types/bookmark';
+import { SummarizeButton } from '@/components/SummarizeButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -358,6 +359,15 @@ export function YouTubeCard({
         isLoading={isGeneratingHighlights}
         onGenerateHighlights={handleGenerateHighlights}
         videoUrl={bookmark.tweet_url}
+      />
+
+      {/* Summarize */}
+      <SummarizeButton
+        bookmarkId={bookmark.id}
+        content={bookmark.content}
+        url={bookmark.tweet_url}
+        platform={bookmark.platform}
+        existingSummary={null}
       />
 
       {/* Add note */}
