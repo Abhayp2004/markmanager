@@ -30,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+    }).catch(() => {
+      // If Supabase is not configured or unreachable, ignore the error
+    }).finally(() => {
       setLoading(false);
     });
 
