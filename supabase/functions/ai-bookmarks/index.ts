@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, content, query, bookmarks, tweetUrl } = await req.json();
+    const { action, content, query, bookmarks, tweetUrl, platform: reqPlatform } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -125,6 +125,94 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ tags: ['other'], summary: '' }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } else if (action === 'summarize') {
+      let textToSummarize = content;
+      const platform = reqPlatform || 'twitter';
+      
+      if (!textToSummarize && tweetUrl) {
+        try {
+          if (platform === 'twitter') {
+            const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(tweetUrl)}&omit_script=true`;
+            const oembedResponse = await fetch(oembedUrl);
+            if (oembedResponse.ok) {
+              const oembedData = await oembedResponse.json();
+              textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+          } else {
+            textToSummarize = `Content from ${platform} URL: ${tweetUrl}`;
+          }
+        } catch (e) {
+          console.log('Fetch failed:', e);
+        }
+      }
+
+      if (!textToSummarize) {
+        textToSummarize = `Content from ${tweetUrl}`;
+      }
+
+      const platformLabel = platform === 'youtube' ? 'YouTube video' : platform === 'linkedin' ? 'LinkedIn post' : 'tweet';
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: `You are a content summarizer. Given a ${platformLabel}, provide a clear, concise summary in 2-4 sentences. Focus on the key message, insights, or takeaways. If the content is limited, infer what you can from context clues like the URL or author.
+
+Respond ONLY with a JSON object: {"summary": "your summary here"}`
+            },
+            {
+              role: "user",
+              content: `Summarize this ${platformLabel}:\n\n${textToSummarize}`
+            }
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI gateway error:', response.status, errorText);
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ summary: '' }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data = await response.json();
+      const assistantMessage = data.choices?.[0]?.message?.content || '';
+      console.log('Summary response:', assistantMessage);
+
+      try {
+        const jsonMatch = assistantMessage.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return new Response(JSON.stringify({ summary: parsed.summary || '' }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (parseError) {
+        console.error('Parse error:', parseError);
+      }
+
+      return new Response(JSON.stringify({ summary: assistantMessage.trim() }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
 
