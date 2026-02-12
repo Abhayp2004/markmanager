@@ -98,7 +98,7 @@ export default function Auth() {
             <Layers className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Bookmark<span className="text-gradient">Hub</span>
+            <span className="text-gradient">Mark</span><span className="font-light italic tracking-wide">Manager</span>
           </h1>
           <p className="mt-3 text-muted-foreground text-lg">
             Your unified bookmark manager
