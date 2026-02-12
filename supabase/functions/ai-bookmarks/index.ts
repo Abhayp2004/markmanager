@@ -166,9 +166,18 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are a content summarizer. Given a ${platformLabel}, provide a clear, concise summary in 2-4 sentences. Focus on the key message, insights, or takeaways. If the content is limited, infer what you can from context clues like the URL or author.
+              content: `You are a detailed content summarizer. Given a ${platformLabel}, provide a thorough and well-structured summary in 4-6 sentences. 
 
-Respond ONLY with a JSON object: {"summary": "your summary here"}`
+Your summary should:
+- Start with the main topic or thesis
+- Cover all key points, arguments, or insights mentioned
+- Include any notable data, statistics, or examples referenced
+- End with the conclusion or call-to-action if applicable
+- Use clear, professional language
+
+If the content is limited, infer what you can from context clues like the URL, author, or keywords.
+
+Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
             },
             {
               role: "user",
