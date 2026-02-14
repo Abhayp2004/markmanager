@@ -12,7 +12,8 @@ import {
   Pencil,
   Check,
   X,
-  Briefcase,
+  User,
+  MessageSquare,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { Bookmark, Folder } from '@/types/bookmark';
 import { SummarizeButton } from '@/components/SummarizeButton';
 
-interface LinkedInCardProps {
+interface RedditCardProps {
   bookmark: Bookmark;
   folders: Folder[];
   onDelete: (id: string) => void;
@@ -38,7 +39,7 @@ interface LinkedInCardProps {
   ) => void;
 }
 
-export function LinkedInCard({
+export function RedditCard({
   bookmark,
   folders,
   onDelete,
@@ -46,7 +47,7 @@ export function LinkedInCard({
   onTagClick,
   onUpdateNotes,
   onUpdatePriority,
-}: LinkedInCardProps) {
+}: RedditCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(bookmark.notes || '');
@@ -63,6 +64,17 @@ export function LinkedInCard({
 
   const tags = bookmark.tags || [];
 
+  // Extract subreddit from URL
+  const extractSubreddit = (url: string) => {
+    const match = url.match(/reddit\.com\/r\/(\w+)/);
+    return match ? `r/${match[1]}` : null;
+  };
+
+  const subreddit = extractSubreddit(bookmark.tweet_url);
+  const postTitle = bookmark.content && bookmark.content !== 'Reddit Post'
+    ? bookmark.content
+    : 'Reddit Post';
+
   return (
     <div
       className={cn(
@@ -72,7 +84,7 @@ export function LinkedInCard({
         bookmark.priority === 'important' && 'border-orange-400/60',
         bookmark.priority === 'reference' && 'border-blue-400/60',
         (!bookmark.priority || bookmark.priority === 'normal') &&
-          'border-border hover:border-blue-600/30'
+          'border-border hover:border-primary/30'
       )}
     >
       {/* Priority badge */}
@@ -106,7 +118,7 @@ export function LinkedInCard({
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="h-4 w-4" />
-                Open on LinkedIn
+                Open on Reddit
               </a>
             </DropdownMenuItem>
 
@@ -117,27 +129,18 @@ export function LinkedInCard({
               Copy link
             </DropdownMenuItem>
 
-            {/* Priority section */}
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
               Set priority
             </div>
 
-            <DropdownMenuItem
-              onClick={() => onUpdatePriority?.(bookmark.id, 'important')}
-            >
+            <DropdownMenuItem onClick={() => onUpdatePriority?.(bookmark.id, 'important')}>
               ⭐ Mark as Important
             </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={() => onUpdatePriority?.(bookmark.id, 'pinned')}
-            >
+            <DropdownMenuItem onClick={() => onUpdatePriority?.(bookmark.id, 'pinned')}>
               📌 Pin
             </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={() => onUpdatePriority?.(bookmark.id, 'reference')}
-            >
+            <DropdownMenuItem onClick={() => onUpdatePriority?.(bookmark.id, 'reference')}>
               🔖 Mark as Reference
             </DropdownMenuItem>
 
@@ -150,7 +153,6 @@ export function LinkedInCard({
               </DropdownMenuItem>
             )}
 
-            {/* Folder section */}
             <DropdownMenuSeparator />
 
             {folders.length > 0 && (
@@ -158,21 +160,16 @@ export function LinkedInCard({
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   Move to folder
                 </div>
-
                 {bookmark.folder_id && (
                   <DropdownMenuItem onClick={() => onMove(bookmark.id, null)}>
                     <FolderInput className="h-4 w-4 mr-2" />
                     Remove from folder
                   </DropdownMenuItem>
                 )}
-
                 {folders
                   .filter((f) => f.id !== bookmark.folder_id)
                   .map((folder) => (
-                    <DropdownMenuItem
-                      key={folder.id}
-                      onClick={() => onMove(bookmark.id, folder.id)}
-                    >
+                    <DropdownMenuItem key={folder.id} onClick={() => onMove(bookmark.id, folder.id)}>
                       <FolderInput className="h-4 w-4 mr-2" />
                       {folder.name}
                     </DropdownMenuItem>
@@ -181,7 +178,6 @@ export function LinkedInCard({
             )}
 
             <DropdownMenuSeparator />
-
             <DropdownMenuItem
               onClick={() => onDelete(bookmark.id)}
               className="text-destructive focus:text-destructive"
@@ -197,46 +193,60 @@ export function LinkedInCard({
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 px-4 pt-3">
           {tags.map((tag) => (
-            <TagBadge
-              key={tag}
-              tag={tag}
-              size="sm"
-              onClick={() => onTagClick?.(tag)}
-            />
+            <TagBadge key={tag} tag={tag} size="sm" onClick={() => onTagClick?.(tag)} />
           ))}
         </div>
       )}
 
-      {/* LinkedIn Content */}
+      {/* Reddit Post Preview */}
       <div className="p-4">
-        <div className="flex flex-col gap-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 border border-blue-500/20">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
-              <Briefcase className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-sm font-medium">LinkedIn Post</span>
+        {/* Post thumbnail */}
+        {bookmark.thumbnail_url && (
+          <div className="mb-3 rounded-lg overflow-hidden">
+            <img
+              src={bookmark.thumbnail_url}
+              alt={postTitle}
+              className="w-full h-40 object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
           </div>
-          
-          {bookmark.content && (
-            <p className="text-sm text-muted-foreground line-clamp-4">
-              {bookmark.content}
-            </p>
-          )}
-          
-          {bookmark.author_name && (
-            <p className="text-xs text-muted-foreground">
-              By {bookmark.author_name}
-            </p>
-          )}
-          
+        )}
+        <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
+          {/* Reddit branding header */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-500 text-white font-bold text-sm">
+              R
+            </div>
+            <div className="flex flex-col">
+              {subreddit && (
+                <span className="text-xs font-semibold text-foreground">{subreddit}</span>
+              )}
+              {bookmark.author_name && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  u/{bookmark.author_name}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Post title */}
+          <h3 className="font-semibold text-foreground text-base leading-snug line-clamp-3">
+            {postTitle}
+          </h3>
+
+          {/* View on Reddit link */}
           <a
             href={bookmark.tweet_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-500 hover:underline flex items-center gap-1"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
           >
-            <ExternalLink className="h-3 w-3" />
-            View on LinkedIn
+            <MessageSquare className="h-4 w-4" />
+            View on Reddit
           </a>
         </div>
       </div>
@@ -268,9 +278,7 @@ export function LinkedInCard({
               onClick={() => setIsEditingNotes(true)}
             >
               <StickyNote className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <p className="text-sm text-muted-foreground flex-1">
-                {bookmark.notes}
-              </p>
+              <p className="text-sm text-muted-foreground flex-1">{bookmark.notes}</p>
               <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover/notes:opacity-100 transition-opacity" />
             </div>
           )}

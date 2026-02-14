@@ -1,4 +1,4 @@
-export type Platform = 'twitter' | 'youtube' | 'linkedin' | 'reddit' | 'medium';
+export type Platform = 'twitter' | 'youtube' | 'reddit' | 'medium';
 
 export type Priority = 'normal' | 'important' | 'pinned' | 'reference';
 
@@ -55,14 +55,6 @@ export const PLATFORM_CONFIG: Record<Platform, {
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/,
     ],
     placeholder: 'https://youtube.com/watch?v=...',
-  },
-  linkedin: {
-    label: 'LinkedIn',
-    icon: '💼',
-    urlPatterns: [
-      /linkedin\.com\/(?:posts|pulse|feed\/update)/,
-    ],
-    placeholder: 'https://linkedin.com/posts/...',
   },
   reddit: {
     label: 'Reddit',
