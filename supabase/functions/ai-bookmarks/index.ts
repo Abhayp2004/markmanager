@@ -345,6 +345,41 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       return new Response(JSON.stringify({ results: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    } else if (action === 'fetch-meta') {
+      // Fetch og:image and og:title from a URL (for Medium etc. that block client CORS)
+      if (!tweetUrl) {
+        return new Response(JSON.stringify({ error: 'URL required' }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let ogImage = '';
+      let ogTitle = '';
+      let ogDescription = '';
+      
+      // Use microlink.io API to extract meta (works where direct fetch is blocked)
+      try {
+        const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(tweetUrl)}`;
+        const response = await fetch(microlinkUrl);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'success' && data.data) {
+            ogTitle = data.data.title || '';
+            ogDescription = data.data.description || '';
+            ogImage = data.data.image?.url || '';
+            console.log('Microlink meta - title:', ogTitle?.substring(0, 50), 'image:', ogImage?.substring(0, 80));
+          }
+        } else {
+          console.log('Microlink failed with status:', response.status);
+          await response.text();
+        }
+      } catch (e) {
+        console.log('Microlink fetch failed:', e);
+      }
+
+      return new Response(JSON.stringify({ image: ogImage, title: ogTitle, description: ogDescription }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), {

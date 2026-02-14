@@ -226,6 +226,20 @@ export function MediumCard({
 
       {/* Medium Article Preview */}
       <div className="p-4">
+        {/* Article thumbnail */}
+        {bookmark.thumbnail_url && (
+          <div className="mb-3 rounded-lg overflow-hidden">
+            <img
+              src={bookmark.thumbnail_url}
+              alt={articleTitle}
+              className="w-full h-40 object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
           {/* Medium branding header */}
           <div className="flex items-center gap-2">
