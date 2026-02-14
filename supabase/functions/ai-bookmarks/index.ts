@@ -29,6 +29,29 @@ serve(async (req) => {
       // Analyze tweet content and generate tags
       let textToAnalyze = content;
       
+      // If content is generic "Medium Article", try to extract from URL
+      if ((!textToAnalyze || textToAnalyze === 'Medium Article') && tweetUrl && tweetUrl.includes('medium.com')) {
+        try {
+          const pageResponse = await fetch(tweetUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
+            redirect: 'follow',
+          });
+          if (pageResponse.ok) {
+            const html = await pageResponse.text();
+            const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+            const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
+              || html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+            const title = ogTitleMatch?.[1] || '';
+            const description = descMatch?.[1] || '';
+            if (title || description) {
+              textToAnalyze = `Medium article: "${title}". ${description}`;
+            }
+          }
+        } catch (e) {
+          console.log('Medium page fetch failed for analyze:', e);
+        }
+      }
+      
       // If no content, try to fetch from oEmbed
       if (!textToAnalyze && tweetUrl) {
         console.log('No content provided, fetching oEmbed for:', tweetUrl);
@@ -37,7 +60,6 @@ serve(async (req) => {
           const oembedResponse = await fetch(oembedUrl);
           if (oembedResponse.ok) {
             const oembedData = await oembedResponse.json();
-            // Extract text from HTML
             textToAnalyze = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             console.log('Extracted text from oEmbed:', textToAnalyze?.substring(0, 100));
           }
@@ -140,6 +162,29 @@ serve(async (req) => {
             if (oembedResponse.ok) {
               const oembedData = await oembedResponse.json();
               textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+          } else if (platform === 'medium') {
+            // Fetch actual Medium page HTML for better content extraction
+            try {
+              const pageResponse = await fetch(tweetUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
+                redirect: 'follow',
+              });
+              if (pageResponse.ok) {
+                const html = await pageResponse.text();
+                // Extract meta description and title from HTML
+                const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+                const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i) 
+                  || html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+                const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+                
+                const title = ogTitleMatch?.[1] || titleMatch?.[1] || '';
+                const description = descMatch?.[1] || '';
+                textToSummarize = `Medium article: "${title}". ${description}. URL: ${tweetUrl}`;
+                console.log('Extracted Medium content:', textToSummarize.substring(0, 200));
+              }
+            } catch (e) {
+              console.log('Medium page fetch failed:', e);
             }
           } else {
             // For LinkedIn, Reddit, etc. - use noembed
