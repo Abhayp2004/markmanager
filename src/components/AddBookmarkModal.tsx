@@ -169,29 +169,41 @@ export function AddBookmarkModal({
         }
         if (!content) content = 'Reddit Post';
     } else if (selectedPlatform === 'medium') {
-        // Extract title and author from Medium URL slug
+        // Fetch og:image, og:title from Medium via edge function (bypasses CORS)
         try {
-          const urlObj = new URL(trimmedUrl);
-          const pathParts = urlObj.pathname.split('/').filter(Boolean);
-          
-          // Extract author from @username pattern
-          const authorPart = pathParts.find(p => p.startsWith('@'));
-          if (authorPart) {
-            authorName = authorPart.replace('@', '');
-          }
-          
-          // Extract title from the last path segment (slug)
-          const slug = pathParts[pathParts.length - 1];
-          if (slug) {
-            // Remove the Medium hash suffix (e.g., -e08a2da6372b)
-            const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
-            content = cleanSlug
-              .split('-')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
+          const metaResponse = await supabase.functions.invoke('ai-bookmarks', {
+            body: { action: 'fetch-meta', tweetUrl: trimmedUrl },
+          });
+          if (metaResponse.data && !metaResponse.error) {
+            content = metaResponse.data.title || '';
+            authorName = content ? null : null; // will extract from URL below
+            // Extract author from URL
+            try {
+              const urlObj = new URL(trimmedUrl);
+              const authorPart = urlObj.pathname.split('/').find((p: string) => p.startsWith('@'));
+              if (authorPart) authorName = authorPart.replace('@', '');
+            } catch {}
+            // Store thumbnail
+            if (metaResponse.data.image) {
+              embedHtml = metaResponse.data.image; // temporarily store image URL in embedHtml, will use thumbnail_url
+            }
           }
         } catch {
-          console.log('URL parsing failed for Medium');
+          console.log('Meta fetch failed for Medium');
+        }
+        // Fallback: extract title from URL slug
+        if (!content) {
+          try {
+            const urlObj = new URL(trimmedUrl);
+            const pathParts = urlObj.pathname.split('/').filter(Boolean);
+            const authorPart = pathParts.find((p: string) => p.startsWith('@'));
+            if (authorPart) authorName = authorPart.replace('@', '');
+            const slug = pathParts[pathParts.length - 1];
+            if (slug) {
+              const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
+              content = cleanSlug.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            }
+          } catch {}
         }
         if (!content) content = 'Medium Article';
       }
@@ -217,17 +229,21 @@ export function AddBookmarkModal({
         console.log('AI tagging failed');
       }
 
+      // For Medium, embedHtml temporarily holds the og:image URL
+      const thumbnailUrl = selectedPlatform === 'medium' ? embedHtml : null;
+
       const { error } = await supabase.from('bookmarks').insert({
         user_id: user.id,
         tweet_url: trimmedUrl,
         folder_id: folderId || null,
-        embed_html: embedHtml,
+        embed_html: selectedPlatform === 'medium' ? null : embedHtml,
         author_name: authorName,
         author_url: authorUrl,
         tags: tags.length > 0 ? tags : ['other'],
         content: content || summary,
         priority,
         platform: selectedPlatform,
+        thumbnail_url: thumbnailUrl,
       });
 
       if (error) throw error;
