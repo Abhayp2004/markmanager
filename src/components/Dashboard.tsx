@@ -292,11 +292,31 @@ export function Dashboard() {
             </div>
           </div>
 
+          {/* Tags */}
+          {usedTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {selectedTag && (
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" /> Clear filter
+                </button>
+              )}
+              {usedTags.map((tag) => (
+                <TagBadge
+                  key={tag}
+                  tag={tag}
+                  active={selectedTag === tag}
+                  onClick={() => handleTagClick(tag)}
+                />
+              ))}
+            </div>
+          )}
         </header>
 
-        {/* Priority & Category filters */}
-        <div className="border-b border-border px-4 sm:px-6 py-2 flex gap-2 flex-wrap items-center">
-          {/* Priority filters */}
+        {/* Priority filter */}
+        <div className="border-b border-border px-4 sm:px-6 py-2 flex gap-2 flex-wrap">
           {[
             { key: "all", label: "All" },
             { key: "pinned", label: "📌 Pinned" },
@@ -316,35 +336,6 @@ export function Dashboard() {
               {item.label}
             </button>
           ))}
-
-          {/* Category/Tag filter separator */}
-          {usedTags.length > 1 && (
-            <>
-              <div className="w-px h-6 bg-border mx-1" />
-              {usedTags.filter(t => t !== 'other').map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleTagClick(tag)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-sm border transition capitalize",
-                    selectedTag === tag
-                      ? "bg-accent text-accent-foreground border-accent"
-                      : "bg-secondary/40 text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  {tag}
-                </button>
-              ))}
-              {selectedTag && (
-                <button
-                  onClick={() => setSelectedTag(null)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1.5"
-                >
-                  <X className="h-3 w-3" /> Clear
-                </button>
-              )}
-            </>
-          )}
         </div>
 
         {/* CONTENT */}
