@@ -141,20 +141,6 @@ serve(async (req) => {
               const oembedData = await oembedResponse.json();
               textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             }
-          } else if (platform === 'github') {
-            // Try GitHub API for richer content
-            const ghMatch = tweetUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-            if (ghMatch) {
-              try {
-                const ghResponse = await fetch(`https://api.github.com/repos/${ghMatch[1]}/${ghMatch[2]}`);
-                if (ghResponse.ok) {
-                  const ghData = await ghResponse.json();
-                  textToSummarize = `GitHub Repository: ${ghData.full_name}\nDescription: ${ghData.description || 'None'}\nLanguage: ${ghData.language || 'Unknown'}\nStars: ${ghData.stargazers_count}\nForks: ${ghData.forks_count}\nTopics: ${(ghData.topics || []).join(', ')}`;
-                }
-              } catch (e) {
-                console.log('GitHub API fetch failed:', e);
-              }
-            }
           } else {
             // For LinkedIn, Reddit, etc. - use noembed
             try {
@@ -182,7 +168,7 @@ serve(async (req) => {
         youtube: 'YouTube video',
         linkedin: 'LinkedIn post',
         reddit: 'Reddit post',
-        github: 'GitHub repository',
+        medium: 'Medium article',
         twitter: 'tweet',
       };
       const platformLabel = platformLabels[platform] || 'content';
