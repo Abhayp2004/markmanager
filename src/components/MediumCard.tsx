@@ -69,14 +69,36 @@ export function MediumCard({
   // Extract a readable title from the URL if no content
   const extractTitleFromUrl = (url: string) => {
     try {
-      const parts = url.split('/').pop()?.replace(/-/g, ' ').replace(/[a-f0-9]{10,}$/, '').trim();
-      return parts ? parts.charAt(0).toUpperCase() + parts.slice(1) : 'Medium Article';
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/').filter(Boolean);
+      const slug = pathParts[pathParts.length - 1];
+      if (slug) {
+        const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
+        return cleanSlug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+      return 'Medium Article';
     } catch {
       return 'Medium Article';
     }
   };
 
-  const articleTitle = bookmark.content || extractTitleFromUrl(bookmark.tweet_url);
+  const extractAuthorFromUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      const authorPart = urlObj.pathname.split('/').find(p => p.startsWith('@'));
+      return authorPart ? authorPart.replace('@', '') : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const articleTitle = (bookmark.content && bookmark.content !== 'Medium Article') 
+    ? bookmark.content 
+    : extractTitleFromUrl(bookmark.tweet_url);
+  const displayAuthor = bookmark.author_name || extractAuthorFromUrl(bookmark.tweet_url);
   const estimatedReadTime = Math.max(2, Math.ceil((articleTitle?.length || 0) / 50));
 
   return (
@@ -220,10 +242,10 @@ export function MediumCard({
 
           {/* Author & read time */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            {bookmark.author_name && (
+            {displayAuthor && (
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
-                <span>{bookmark.author_name}</span>
+                <span>{displayAuthor}</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">

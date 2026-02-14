@@ -169,16 +169,29 @@ export function AddBookmarkModal({
         }
         if (!content) content = 'Reddit Post';
     } else if (selectedPlatform === 'medium') {
-        // Try noembed for Medium articles
+        // Extract title and author from Medium URL slug
         try {
-          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
-          if (response.ok) {
-            const data = await response.json();
-            content = data.title || '';
-            authorName = data.author_name || '';
+          const urlObj = new URL(trimmedUrl);
+          const pathParts = urlObj.pathname.split('/').filter(Boolean);
+          
+          // Extract author from @username pattern
+          const authorPart = pathParts.find(p => p.startsWith('@'));
+          if (authorPart) {
+            authorName = authorPart.replace('@', '');
+          }
+          
+          // Extract title from the last path segment (slug)
+          const slug = pathParts[pathParts.length - 1];
+          if (slug) {
+            // Remove the Medium hash suffix (e.g., -e08a2da6372b)
+            const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
+            content = cleanSlug
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
           }
         } catch {
-          console.log('noembed fetch failed for Medium');
+          console.log('URL parsing failed for Medium');
         }
         if (!content) content = 'Medium Article';
       }
