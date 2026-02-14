@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { YouTubeCard } from "@/components/YouTubeCard";
-import { LinkedInCard } from "@/components/LinkedInCard";
+import { RedditCard } from "@/components/RedditCard";
+
 import { MediumCard } from "@/components/MediumCard";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { TagBadge } from "@/components/TagBadge";
@@ -16,7 +17,6 @@ import {
   X,
   Menu,
   Play,
-  Briefcase,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,7 +43,6 @@ const priorityOrder: Record<string, number> = {
 const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-xl">𝕏</span>,
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
-  linkedin: <Briefcase className="h-6 w-6 text-blue-600" />,
   reddit: <span className="text-xl">🔴</span>,
   medium: <span className="text-xl">📝</span>,
 };
@@ -219,11 +218,10 @@ export function Dashboard() {
     switch (bookmark.platform) {
       case 'youtube':
         return <YouTubeCard {...commonProps} onUpdateHighlights={handleUpdateHighlights} />;
-      case 'linkedin':
-        return <LinkedInCard {...commonProps} />;
       case 'medium':
         return <MediumCard {...commonProps} />;
       case 'reddit':
+        return <RedditCard {...commonProps} />;
       default:
         return <BookmarkCard {...commonProps} />;
     }

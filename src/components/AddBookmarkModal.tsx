@@ -142,30 +142,23 @@ export function AddBookmarkModal({
             console.log('noembed fetch failed');
           }
         }
-      } else if (selectedPlatform === 'linkedin') {
-        // Try noembed for LinkedIn
-        try {
-          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
-          if (response.ok) {
-            const data = await response.json();
-            content = data.title || '';
-            authorName = data.author_name || '';
-          }
-        } catch {
-          console.log('noembed fetch failed for LinkedIn');
-        }
-        if (!content) content = 'LinkedIn Post';
       } else if (selectedPlatform === 'reddit') {
-        // Try Reddit oEmbed
+        // Fetch Reddit metadata via Microlink API (bypasses CORS/JS rendering)
         try {
-          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
+          const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(trimmedUrl)}`;
+          const response = await fetch(microlinkUrl);
           if (response.ok) {
             const data = await response.json();
-            content = data.title || '';
-            authorName = data.author_name || '';
+            if (data.status === 'success' && data.data) {
+              content = data.data.title || '';
+              authorName = data.data.author || '';
+              if (data.data.image?.url) {
+                embedHtml = data.data.image.url; // temporarily store image URL
+              }
+            }
           }
         } catch {
-          console.log('noembed fetch failed for Reddit');
+          console.log('Microlink fetch failed for Reddit');
         }
         if (!content) content = 'Reddit Post';
     } else if (selectedPlatform === 'medium') {
@@ -229,14 +222,14 @@ export function AddBookmarkModal({
         console.log('AI tagging failed');
       }
 
-      // For Medium, embedHtml temporarily holds the og:image URL
-      const thumbnailUrl = selectedPlatform === 'medium' ? embedHtml : null;
+      // For Medium and Reddit, embedHtml temporarily holds the og:image URL
+      const thumbnailUrl = (selectedPlatform === 'medium' || selectedPlatform === 'reddit') ? embedHtml : null;
 
       const { error } = await supabase.from('bookmarks').insert({
         user_id: user.id,
         tweet_url: trimmedUrl,
         folder_id: folderId || null,
-        embed_html: selectedPlatform === 'medium' ? null : embedHtml,
+        embed_html: (selectedPlatform === 'medium' || selectedPlatform === 'reddit') ? null : embedHtml,
         author_name: authorName,
         author_url: authorUrl,
         tags: tags.length > 0 ? tags : ['other'],

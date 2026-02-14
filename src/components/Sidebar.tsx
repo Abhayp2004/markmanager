@@ -10,7 +10,6 @@ import {
   X,
   Loader2,
   Play,
-  Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +37,6 @@ interface SidebarProps {
 const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-base">𝕏</span>,
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
-  linkedin: <Briefcase className="h-4 w-4 text-blue-600" />,
   reddit: <span className="text-base">🔴</span>,
   medium: <span className="text-base">📝</span>,
 };
