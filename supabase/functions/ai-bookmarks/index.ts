@@ -29,26 +29,20 @@ serve(async (req) => {
       // Analyze tweet content and generate tags
       let textToAnalyze = content;
       
-      // If content is generic "Medium Article", try to extract from URL
+      // If content is generic "Medium Article", extract from URL slug
       if ((!textToAnalyze || textToAnalyze === 'Medium Article') && tweetUrl && tweetUrl.includes('medium.com')) {
         try {
-          const pageResponse = await fetch(tweetUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
-            redirect: 'follow',
-          });
-          if (pageResponse.ok) {
-            const html = await pageResponse.text();
-            const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
-            const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
-              || html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
-            const title = ogTitleMatch?.[1] || '';
-            const description = descMatch?.[1] || '';
-            if (title || description) {
-              textToAnalyze = `Medium article: "${title}". ${description}`;
-            }
+          const urlObj = new URL(tweetUrl);
+          const pathParts = urlObj.pathname.split('/').filter(Boolean);
+          const slug = pathParts[pathParts.length - 1];
+          if (slug) {
+            const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
+            const extractedTitle = cleanSlug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            textToAnalyze = `Medium article: "${extractedTitle}"`;
+            console.log('Extracted Medium title for analysis:', extractedTitle);
           }
         } catch (e) {
-          console.log('Medium page fetch failed for analyze:', e);
+          console.log('URL parsing failed for Medium analyze:', e);
         }
       }
       
@@ -154,7 +148,9 @@ serve(async (req) => {
       let textToSummarize = content;
       const platform = reqPlatform || 'twitter';
       
-      if (!textToSummarize && tweetUrl) {
+      // For Medium, always try to fetch real content even if we have generic placeholder
+      const needsFetch = !textToSummarize || textToSummarize === 'Medium Article' || textToSummarize === 'LinkedIn Post' || textToSummarize === 'Reddit Post';
+      if (needsFetch && tweetUrl) {
         try {
           if (platform === 'twitter') {
             const oembedUrl = `https://publish.twitter.com/oembed?url=${encodeURIComponent(tweetUrl)}&omit_script=true`;
@@ -164,27 +160,22 @@ serve(async (req) => {
               textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             }
           } else if (platform === 'medium') {
-            // Fetch actual Medium page HTML for better content extraction
+            // Extract title from URL slug for Medium (page fetch often blocked)
             try {
-              const pageResponse = await fetch(tweetUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
-                redirect: 'follow',
-              });
-              if (pageResponse.ok) {
-                const html = await pageResponse.text();
-                // Extract meta description and title from HTML
-                const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-                const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i) 
-                  || html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
-                const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
-                
-                const title = ogTitleMatch?.[1] || titleMatch?.[1] || '';
-                const description = descMatch?.[1] || '';
-                textToSummarize = `Medium article: "${title}". ${description}. URL: ${tweetUrl}`;
-                console.log('Extracted Medium content:', textToSummarize.substring(0, 200));
+              const urlObj = new URL(tweetUrl);
+              const pathParts = urlObj.pathname.split('/').filter(Boolean);
+              const authorPart = pathParts.find((p: string) => p.startsWith('@'));
+              const slug = pathParts[pathParts.length - 1];
+              let extractedTitle = '';
+              if (slug) {
+                const cleanSlug = slug.replace(/-[a-f0-9]{10,}$/, '');
+                extractedTitle = cleanSlug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
               }
+              const author = authorPart ? authorPart.replace('@', '') : '';
+              textToSummarize = `Medium article titled "${extractedTitle}"${author ? ` by ${author}` : ''}. URL: ${tweetUrl}. Please provide a detailed summary based on the article title and any context you can infer.`;
+              console.log('Medium content from URL slug:', textToSummarize);
             } catch (e) {
-              console.log('Medium page fetch failed:', e);
+              console.log('URL parsing failed for Medium:', e);
             }
           } else {
             // For LinkedIn, Reddit, etc. - use noembed
