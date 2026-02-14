@@ -1,4 +1,4 @@
-export type Platform = 'twitter' | 'youtube' | 'linkedin';
+export type Platform = 'twitter' | 'youtube' | 'linkedin' | 'reddit' | 'github';
 
 export type Priority = 'normal' | 'important' | 'pinned' | 'reference';
 
@@ -63,6 +63,22 @@ export const PLATFORM_CONFIG: Record<Platform, {
       /linkedin\.com\/(?:posts|pulse|feed\/update)/,
     ],
     placeholder: 'https://linkedin.com/posts/...',
+  },
+  reddit: {
+    label: 'Reddit',
+    icon: '🔴',
+    urlPatterns: [
+      /(?:reddit\.com|redd\.it)\/r\/\w+/,
+    ],
+    placeholder: 'https://reddit.com/r/...',
+  },
+  github: {
+    label: 'GitHub',
+    icon: '🐙',
+    urlPatterns: [
+      /github\.com\/[\w-]+\/[\w.-]+/,
+    ],
+    placeholder: 'https://github.com/user/repo',
   },
 };
 

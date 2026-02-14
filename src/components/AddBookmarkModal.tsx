@@ -143,8 +143,49 @@ export function AddBookmarkModal({
           }
         }
       } else if (selectedPlatform === 'linkedin') {
-        // LinkedIn has limited public API, just store the URL
-        content = 'LinkedIn Post';
+        // Try noembed for LinkedIn
+        try {
+          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
+          if (response.ok) {
+            const data = await response.json();
+            content = data.title || '';
+            authorName = data.author_name || '';
+          }
+        } catch {
+          console.log('noembed fetch failed for LinkedIn');
+        }
+        if (!content) content = 'LinkedIn Post';
+      } else if (selectedPlatform === 'reddit') {
+        // Try Reddit oEmbed
+        try {
+          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(trimmedUrl)}`);
+          if (response.ok) {
+            const data = await response.json();
+            content = data.title || '';
+            authorName = data.author_name || '';
+          }
+        } catch {
+          console.log('noembed fetch failed for Reddit');
+        }
+        if (!content) content = 'Reddit Post';
+      } else if (selectedPlatform === 'github') {
+        // Extract repo info from URL
+        const ghMatch = trimmedUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        if (ghMatch) {
+          authorName = ghMatch[1];
+          content = `${ghMatch[1]}/${ghMatch[2]}`;
+          // Try GitHub API for description
+          try {
+            const response = await fetch(`https://api.github.com/repos/${ghMatch[1]}/${ghMatch[2]}`);
+            if (response.ok) {
+              const data = await response.json();
+              content = `${data.full_name}: ${data.description || 'No description'}`;
+              authorName = data.owner?.login || ghMatch[1];
+            }
+          } catch {
+            console.log('GitHub API fetch failed');
+          }
+        }
       }
 
       // AI tagging

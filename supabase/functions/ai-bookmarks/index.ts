@@ -141,8 +141,33 @@ serve(async (req) => {
               const oembedData = await oembedResponse.json();
               textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             }
+          } else if (platform === 'github') {
+            // Try GitHub API for richer content
+            const ghMatch = tweetUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+            if (ghMatch) {
+              try {
+                const ghResponse = await fetch(`https://api.github.com/repos/${ghMatch[1]}/${ghMatch[2]}`);
+                if (ghResponse.ok) {
+                  const ghData = await ghResponse.json();
+                  textToSummarize = `GitHub Repository: ${ghData.full_name}\nDescription: ${ghData.description || 'None'}\nLanguage: ${ghData.language || 'Unknown'}\nStars: ${ghData.stargazers_count}\nForks: ${ghData.forks_count}\nTopics: ${(ghData.topics || []).join(', ')}`;
+                }
+              } catch (e) {
+                console.log('GitHub API fetch failed:', e);
+              }
+            }
           } else {
-            textToSummarize = `Content from ${platform} URL: ${tweetUrl}`;
+            // For LinkedIn, Reddit, etc. - use noembed
+            try {
+              const noembedResponse = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(tweetUrl)}`);
+              if (noembedResponse.ok) {
+                const noembedData = await noembedResponse.json();
+                if (noembedData.title) {
+                  textToSummarize = `${platform} content: ${noembedData.title}${noembedData.author_name ? ` by ${noembedData.author_name}` : ''}`;
+                }
+              }
+            } catch (e) {
+              console.log('noembed fetch failed:', e);
+            }
           }
         } catch (e) {
           console.log('Fetch failed:', e);
@@ -153,7 +178,14 @@ serve(async (req) => {
         textToSummarize = `Content from ${tweetUrl}`;
       }
 
-      const platformLabel = platform === 'youtube' ? 'YouTube video' : platform === 'linkedin' ? 'LinkedIn post' : 'tweet';
+      const platformLabels: Record<string, string> = {
+        youtube: 'YouTube video',
+        linkedin: 'LinkedIn post',
+        reddit: 'Reddit post',
+        github: 'GitHub repository',
+        twitter: 'tweet',
+      };
+      const platformLabel = platformLabels[platform] || 'content';
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
