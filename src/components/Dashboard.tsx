@@ -43,6 +43,8 @@ const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-xl">𝕏</span>,
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
   linkedin: <Briefcase className="h-6 w-6 text-blue-600" />,
+  reddit: <span className="text-xl">🔴</span>,
+  github: <span className="text-xl">🐙</span>,
 };
 
 export function Dashboard() {
@@ -218,6 +220,8 @@ export function Dashboard() {
         return <YouTubeCard {...commonProps} onUpdateHighlights={handleUpdateHighlights} />;
       case 'linkedin':
         return <LinkedInCard {...commonProps} />;
+      case 'reddit':
+      case 'github':
       default:
         return <BookmarkCard {...commonProps} />;
     }
