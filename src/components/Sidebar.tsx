@@ -40,7 +40,7 @@ const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
   linkedin: <Briefcase className="h-4 w-4 text-blue-600" />,
   reddit: <span className="text-base">🔴</span>,
-  github: <span className="text-base">🐙</span>,
+  medium: <span className="text-base">📝</span>,
 };
 
 export function Sidebar({ 

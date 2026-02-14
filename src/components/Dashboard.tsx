@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { YouTubeCard } from "@/components/YouTubeCard";
 import { LinkedInCard } from "@/components/LinkedInCard";
+import { MediumCard } from "@/components/MediumCard";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { TagBadge } from "@/components/TagBadge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
   linkedin: <Briefcase className="h-6 w-6 text-blue-600" />,
   reddit: <span className="text-xl">🔴</span>,
-  github: <span className="text-xl">🐙</span>,
+  medium: <span className="text-xl">📝</span>,
 };
 
 export function Dashboard() {
@@ -220,8 +221,9 @@ export function Dashboard() {
         return <YouTubeCard {...commonProps} onUpdateHighlights={handleUpdateHighlights} />;
       case 'linkedin':
         return <LinkedInCard {...commonProps} />;
+      case 'medium':
+        return <MediumCard {...commonProps} />;
       case 'reddit':
-      case 'github':
       default:
         return <BookmarkCard {...commonProps} />;
     }
