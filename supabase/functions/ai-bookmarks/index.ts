@@ -380,6 +380,64 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       return new Response(JSON.stringify({ image: ogImage, title: ogTitle, description: ogDescription }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+
+    } else if (action === 'fetch-reddit') {
+      // Fetch Reddit post metadata using Reddit's JSON API (server-side to bypass CORS)
+      if (!tweetUrl) {
+        return new Response(JSON.stringify({ error: 'URL required' }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let title = '';
+      let author = '';
+      let thumbnail = '';
+      let subreddit = '';
+
+      try {
+        // Clean up the URL - remove query params and add .json
+        const urlObj = new URL(tweetUrl);
+        const cleanPath = urlObj.pathname.replace(/\/$/, '');
+        const jsonUrl = `https://www.reddit.com${cleanPath}.json`;
+        console.log('Fetching Reddit JSON:', jsonUrl);
+
+        const response = await fetch(jsonUrl, {
+          headers: {
+            'User-Agent': 'MarkManager/1.0 (bookmark saver)',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Reddit returns an array: [post listing, comments listing]
+          const postData = data?.[0]?.data?.children?.[0]?.data;
+          if (postData) {
+            title = postData.title || '';
+            author = postData.author || '';
+            subreddit = postData.subreddit_name_prefixed || '';
+            // Reddit thumbnails: skip 'self', 'default', 'nsfw', 'spoiler'
+            const thumb = postData.thumbnail || '';
+            if (thumb && thumb.startsWith('http')) {
+              thumbnail = thumb;
+            }
+            // Try preview images for higher quality
+            const previewImage = postData.preview?.images?.[0]?.source?.url;
+            if (previewImage) {
+              thumbnail = previewImage.replace(/&amp;/g, '&');
+            }
+            console.log('Reddit post - title:', title?.substring(0, 50), 'author:', author, 'subreddit:', subreddit);
+          }
+        } else {
+          console.log('Reddit JSON API failed with status:', response.status);
+          await response.text();
+        }
+      } catch (e) {
+        console.log('Reddit fetch failed:', e);
+      }
+
+      return new Response(JSON.stringify({ title, author, thumbnail, subreddit }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), {

@@ -143,22 +143,20 @@ export function AddBookmarkModal({
           }
         }
       } else if (selectedPlatform === 'reddit') {
-        // Fetch Reddit metadata via Microlink API (bypasses CORS/JS rendering)
+        // Fetch Reddit metadata via edge function (Reddit blocks client-side requests)
         try {
-          const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(trimmedUrl)}`;
-          const response = await fetch(microlinkUrl);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'success' && data.data) {
-              content = data.data.title || '';
-              authorName = data.data.author || '';
-              if (data.data.image?.url) {
-                embedHtml = data.data.image.url; // temporarily store image URL
-              }
+          const redditResponse = await supabase.functions.invoke('ai-bookmarks', {
+            body: { action: 'fetch-reddit', tweetUrl: trimmedUrl },
+          });
+          if (redditResponse.data && !redditResponse.error) {
+            content = redditResponse.data.title || '';
+            authorName = redditResponse.data.author || '';
+            if (redditResponse.data.thumbnail) {
+              embedHtml = redditResponse.data.thumbnail; // temporarily store image URL
             }
           }
         } catch {
-          console.log('Microlink fetch failed for Reddit');
+          console.log('Reddit metadata fetch failed');
         }
         if (!content) content = 'Reddit Post';
     } else if (selectedPlatform === 'medium') {
