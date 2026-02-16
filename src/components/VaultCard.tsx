@@ -179,7 +179,7 @@ export function VaultCard({
             {bookmark.author_name || bookmark.content?.slice(0, 80) || domain}
           </h3>
           {summary && (
-            <p className="text-xs text-muted-foreground mt-1.5 line-clamp-4 leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
               {summary}
             </p>
           )}

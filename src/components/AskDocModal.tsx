@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Send, MessageCircle, Bot, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Bookmark } from "@/types/bookmark";
@@ -27,6 +26,12 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   const handleAsk = async () => {
     const question = input.trim();
@@ -84,7 +89,7 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-[200px] max-h-[400px] pr-2">
+        <div className="flex-1 min-h-[200px] max-h-[400px] overflow-y-auto pr-2">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
               <Bot className="h-10 w-10 mx-auto opacity-40" />
@@ -116,9 +121,10 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
                   </div>
                 </div>
               )}
+              <div ref={bottomRef} />
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="flex gap-2 pt-2 border-t border-border">
           <Input
