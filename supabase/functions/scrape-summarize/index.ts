@@ -71,7 +71,7 @@ serve(async (req) => {
     const contentToAnalyze = [
       title && `Title: ${title}`,
       description && `Description: ${description}`,
-      pageContent && `Content: ${pageContent.substring(0, 3000)}`,
+      pageContent && `Content: ${pageContent.substring(0, 8000)}`,
       `URL: ${url}`,
     ].filter(Boolean).join('\n\n');
 
@@ -90,15 +90,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        max_tokens: 4096,
         messages: [
           {
             role: "system",
             content: `You are a web content analyzer. Given a webpage's metadata, provide:
-1. A concise but informative summary (3-5 sentences) covering the main points
+1. A detailed summary (4-8 sentences) covering the main topics, key arguments, conclusions, and any notable insights
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
-{"summary": "your summary here", "tags": ["tag1", "tag2"]}`
+{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}`
           },
           {
             role: "user",
