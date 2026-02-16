@@ -195,7 +195,7 @@ export function VaultCard({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center justify-between pt-1">
           <a
             href={bookmark.tweet_url}
             target="_blank"
@@ -208,7 +208,7 @@ export function VaultCard({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1 ml-auto"
+            className="h-7 text-xs gap-1"
             onClick={handleSummarize}
             disabled={isSummarizing}
           >
