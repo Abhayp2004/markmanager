@@ -65,19 +65,23 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         max_tokens: 4096,
         messages: [
           {
             role: "system",
-            content: `You are an expert document analyst. The user saved a web article and wants to ask questions about it.
+            content: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
 
-Rules:
-- Answer based ONLY on the provided document content.
-- Be detailed, accurate, and well-structured. Use bullet points or numbered lists when appropriate.
-- Quote or reference specific parts of the document to support your answer.
-- If the answer isn't in the document, clearly state that.
-- If the question is vague, interpret it reasonably and provide the most helpful answer.
+Your approach:
+1. **Read thoroughly** — understand the full document before responding.
+2. **Structure clearly** — use markdown: ## headers, **bold** for key terms, bullet points, and numbered lists.
+3. **Cite the source** — quote or reference specific passages to support every claim.
+4. **Distinguish fact from inference** — clearly separate what the document states vs. your interpretation.
+5. **Be honest** — if the document doesn't cover it, say so and suggest what might help.
+6. For summary/takeaway requests, structure as: **Main Thesis** → **Key Arguments** → **Evidence** → **Conclusions**.
+7. Give actionable, insightful answers — don't just restate the text, add analytical depth.
+
+IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.
 
 Document content:
 ${truncatedContent}`
