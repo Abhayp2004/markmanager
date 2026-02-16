@@ -1,0 +1,151 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { url } = await req.json();
+
+    if (!url) {
+      return new Response(JSON.stringify({ error: 'URL is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    console.log('Scraping URL:', url);
+
+    // Step 1: Fetch metadata via microlink
+    let title = '';
+    let description = '';
+    let image = '';
+    let pageContent = '';
+
+    try {
+      const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(url)}&data.content.selector=article,main,.post-content,.entry-content,#content&data.content.type=text`;
+      const metaResponse = await fetch(microlinkUrl);
+      if (metaResponse.ok) {
+        const metaData = await metaResponse.json();
+        if (metaData.status === 'success' && metaData.data) {
+          title = metaData.data.title || '';
+          description = metaData.data.description || '';
+          image = metaData.data.image?.url || '';
+          pageContent = metaData.data.content || '';
+          console.log('Microlink - title:', title?.substring(0, 60));
+        }
+      }
+    } catch (e) {
+      console.log('Microlink fetch failed:', e);
+    }
+
+    // Fallback: extract info from URL
+    if (!title) {
+      try {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        const slug = pathParts[pathParts.length - 1];
+        if (slug) {
+          title = slug.replace(/[-_]/g, ' ').replace(/\.[^.]+$/, '');
+          title = title.charAt(0).toUpperCase() + title.slice(1);
+        } else {
+          title = urlObj.hostname;
+        }
+      } catch {
+        title = url;
+      }
+    }
+
+    // Step 2: AI summarize + tag
+    const contentToAnalyze = [
+      title && `Title: ${title}`,
+      description && `Description: ${description}`,
+      pageContent && `Content: ${pageContent.substring(0, 3000)}`,
+      `URL: ${url}`,
+    ].filter(Boolean).join('\n\n');
+
+    const AVAILABLE_TAGS = [
+      'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics',
+      'science', 'business', 'lifestyle', 'entertainment', 'education',
+      'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation',
+      'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
+    ];
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `You are a web content analyzer. Given a webpage's metadata, provide:
+1. A concise but informative summary (3-5 sentences) covering the main points
+2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
+
+Respond ONLY with valid JSON:
+{"summary": "your summary here", "tags": ["tag1", "tag2"]}`
+          },
+          {
+            role: "user",
+            content: contentToAnalyze
+          }
+        ],
+      }),
+    });
+
+    let summary = description || '';
+    let tags = ['other'];
+
+    if (response.ok) {
+      const data = await response.json();
+      const aiMessage = data.choices?.[0]?.message?.content || '';
+      try {
+        const jsonMatch = aiMessage.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          summary = parsed.summary || summary;
+          const validTags = (parsed.tags || []).filter((t: string) =>
+            AVAILABLE_TAGS.includes(t.toLowerCase())
+          ).map((t: string) => t.toLowerCase());
+          if (validTags.length > 0) tags = validTags;
+        }
+      } catch (e) {
+        console.log('AI parse error:', e);
+      }
+    }
+
+    return new Response(JSON.stringify({
+      title,
+      summary,
+      tags,
+      image,
+      description,
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Scrape error:', error);
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Failed to scrape',
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
