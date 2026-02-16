@@ -1,4 +1,4 @@
-export type Platform = 'twitter' | 'youtube' | 'reddit' | 'medium';
+export type Platform = 'twitter' | 'youtube' | 'reddit' | 'medium' | 'vault';
 
 export type Priority = 'normal' | 'important' | 'pinned' | 'reference';
 
@@ -73,10 +73,19 @@ export const PLATFORM_CONFIG: Record<Platform, {
     ],
     placeholder: 'https://medium.com/@user/article-title...',
   },
+  vault: {
+    label: 'Internet Vault',
+    icon: '🌐',
+    urlPatterns: [
+      /.+/,  // Accepts any URL
+    ],
+    placeholder: 'https://any-website.com/article...',
+  },
 };
 
 export function detectPlatform(url: string): Platform | null {
   for (const [platform, config] of Object.entries(PLATFORM_CONFIG)) {
+    if (platform === 'vault') continue; // Skip vault — it matches everything
     for (const pattern of config.urlPatterns) {
       if (pattern.test(url)) {
         return platform as Platform;

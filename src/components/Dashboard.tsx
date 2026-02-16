@@ -3,9 +3,10 @@ import { Sidebar } from "@/components/Sidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { YouTubeCard } from "@/components/YouTubeCard";
 import { RedditCard } from "@/components/RedditCard";
-
+import { VaultCard } from "@/components/VaultCard";
 import { MediumCard } from "@/components/MediumCard";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
+import { BulkImportModal } from "@/components/BulkImportModal";
 import { TagBadge } from "@/components/TagBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
   reddit: <span className="text-xl">🔴</span>,
   medium: <span className="text-xl">📝</span>,
+  vault: <span className="text-xl">🌐</span>,
 };
 
 export function Dashboard() {
@@ -64,6 +66,7 @@ export function Dashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   const fetchFolders = async () => {
     if (!user) return;
@@ -222,6 +225,8 @@ export function Dashboard() {
         return <MediumCard {...commonProps} />;
       case 'reddit':
         return <RedditCard {...commonProps} />;
+      case 'vault':
+        return <VaultCard {...commonProps} />;
       default:
         return <BookmarkCard {...commonProps} />;
     }
@@ -284,11 +289,19 @@ export function Dashboard() {
               </div>
 
               {/* Add Bookmark Button */}
-              <Button onClick={() => setIsAddModalOpen(true)} className="h-10 gap-2">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add Bookmark</span>
-                <span className="sm:hidden">Add</span>
-              </Button>
+              {selectedPlatform === 'vault' ? (
+                <Button onClick={() => setIsBulkImportOpen(true)} className="h-10 gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Import URLs</span>
+                  <span className="sm:hidden">Import</span>
+                </Button>
+              ) : (
+                <Button onClick={() => setIsAddModalOpen(true)} className="h-10 gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Add Bookmark</span>
+                  <span className="sm:hidden">Add</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -354,10 +367,10 @@ export function Dashboard() {
               <Button 
                 variant="outline" 
                 className="mt-4"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => selectedPlatform === 'vault' ? setIsBulkImportOpen(true) : setIsAddModalOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add your first {platformConfig.label} bookmark
+                {selectedPlatform === 'vault' ? 'Import your first URLs' : `Add your first ${platformConfig.label} bookmark`}
               </Button>
             </div>
           )}
@@ -370,6 +383,14 @@ export function Dashboard() {
           selectedFolder={selectedFolder}
           selectedPlatform={selectedPlatform}
           onBookmarkAdded={fetchBookmarks}
+        />
+
+        <BulkImportModal
+          open={isBulkImportOpen}
+          onOpenChange={setIsBulkImportOpen}
+          folders={folders}
+          selectedFolder={selectedFolder}
+          onBookmarksAdded={fetchBookmarks}
         />
       </main>
     </div>

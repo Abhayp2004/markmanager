@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.archive-content]
 verify_jwt = false
+
+[functions.scrape-summarize]
+verify_jwt = false

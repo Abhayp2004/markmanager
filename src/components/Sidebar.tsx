@@ -39,6 +39,7 @@ const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
   reddit: <span className="text-base">🔴</span>,
   medium: <span className="text-base">📝</span>,
+  vault: <span className="text-base">🌐</span>,
 };
 
 export function Sidebar({ 
