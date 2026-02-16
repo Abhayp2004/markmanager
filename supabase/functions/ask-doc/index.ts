@@ -20,9 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     // If we have a URL but limited content, try fetching more
@@ -58,19 +58,14 @@ serve(async (req) => {
     // Truncate to fit context window
     const truncatedContent = docContent.substring(0, 20000);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        max_tokens: 4096,
-        messages: [
+        contents: [
           {
-            role: "system",
-            content: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
+            role: "user",
+            parts: [{ text: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
 
 Your approach:
 1. **Read thoroughly** — understand the full document before responding.
@@ -84,13 +79,14 @@ Your approach:
 IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.
 
 Document content:
-${truncatedContent}`
-          },
-          {
-            role: "user",
-            content: question,
+${truncatedContent}
+
+User question: ${question}` }]
           }
         ],
+        generationConfig: {
+          maxOutputTokens: 4096,
+        },
       }),
     });
 
@@ -101,19 +97,13 @@ ${truncatedContent}`
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add more credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
       const errText = await response.text();
-      console.error('AI error:', response.status, errText);
+      console.error('Gemini error:', response.status, errText);
       throw new Error('AI request failed');
     }
 
     const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || 'No answer generated.';
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No answer generated.';
 
     return new Response(JSON.stringify({ answer }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

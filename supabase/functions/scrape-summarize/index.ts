@@ -20,9 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     console.log('Scraping URL:', url);
@@ -82,30 +82,27 @@ serve(async (req) => {
       'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
     ];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        max_tokens: 4096,
-        messages: [
+        contents: [
           {
-            role: "system",
-            content: `You are a web content analyzer. Given a webpage's metadata, provide:
+            role: "user",
+            parts: [{ text: `You are a web content analyzer. Given a webpage's metadata, provide:
 1. A detailed summary (4-8 sentences) covering the main topics, key arguments, conclusions, and any notable insights
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
-{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}`
-          },
-          {
-            role: "user",
-            content: contentToAnalyze
+{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}
+
+Content to analyze:
+${contentToAnalyze}` }]
           }
         ],
+        generationConfig: {
+          maxOutputTokens: 4096,
+        },
       }),
     });
 
@@ -114,7 +111,7 @@ Respond ONLY with valid JSON:
 
     if (response.ok) {
       const data = await response.json();
-      const aiMessage = data.choices?.[0]?.message?.content || '';
+      const aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       try {
         const jsonMatch = aiMessage.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
