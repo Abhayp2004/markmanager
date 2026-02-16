@@ -195,7 +195,7 @@ export function VaultCard({
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-evenly pt-1">
           <a
             href={bookmark.tweet_url}
             target="_blank"
