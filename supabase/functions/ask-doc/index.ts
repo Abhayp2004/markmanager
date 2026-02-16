@@ -56,7 +56,7 @@ serve(async (req) => {
     }
 
     // Truncate to fit context window
-    const truncatedContent = docContent.substring(0, 12000);
+    const truncatedContent = docContent.substring(0, 20000);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -65,12 +65,19 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         max_tokens: 4096,
         messages: [
           {
             role: "system",
-            content: `You are a helpful document assistant. The user has saved a web article/document and wants to ask questions about it. Answer based ONLY on the provided document content. If the answer isn't in the document, say so. Be concise but thorough.
+            content: `You are an expert document analyst. The user saved a web article and wants to ask questions about it.
+
+Rules:
+- Answer based ONLY on the provided document content.
+- Be detailed, accurate, and well-structured. Use bullet points or numbered lists when appropriate.
+- Quote or reference specific parts of the document to support your answer.
+- If the answer isn't in the document, clearly state that.
+- If the question is vague, interpret it reasonably and provide the most helpful answer.
 
 Document content:
 ${truncatedContent}`
