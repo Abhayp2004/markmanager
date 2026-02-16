@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { AskDocModal } from "@/components/AskDocModal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,6 +22,7 @@ import {
   Globe,
   Sparkles,
   StickyNote,
+  MessageCircle,
 } from "lucide-react";
 import { TagBadge } from "@/components/TagBadge";
 import { SummarizeButton } from "@/components/SummarizeButton";
@@ -53,6 +55,7 @@ export function VaultCard({
   const [notes, setNotes] = useState(bookmark.notes || "");
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState(bookmark.content || "");
+  const [isAskOpen, setIsAskOpen] = useState(false);
 
   const handleSaveNotes = () => {
     onUpdateNotes(bookmark.id, notes);
@@ -216,6 +219,15 @@ export function VaultCard({
             )}
             {summary ? "Re-summarize" : "Summarize"}
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs gap-1"
+            onClick={() => setIsAskOpen(true)}
+          >
+            <MessageCircle className="h-3 w-3" />
+            Ask AI
+          </Button>
         </div>
 
         {/* Notes editing */}
@@ -246,6 +258,8 @@ export function VaultCard({
           </div>
         )}
       </CardContent>
+
+      <AskDocModal open={isAskOpen} onOpenChange={setIsAskOpen} bookmark={bookmark} />
     </Card>
   );
 }

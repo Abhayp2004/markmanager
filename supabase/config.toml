@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.scrape-summarize]
 verify_jwt = false
+
+[functions.ask-doc]
+verify_jwt = false
