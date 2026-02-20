@@ -1,5 +1,4 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
 
 interface CameraRigProps {
   pointer: React.MutableRefObject<{ x: number; y: number }>;
@@ -12,20 +11,19 @@ export function CameraRig({ pointer, smoothPointer, scrollProgress }: CameraRigP
 
   useFrame(() => {
     // Smooth pointer follow
-    smoothPointer.current.x += (pointer.current.x - smoothPointer.current.x) * 0.05;
-    smoothPointer.current.y += (pointer.current.y - smoothPointer.current.y) * 0.05;
+    smoothPointer.current.x += (pointer.current.x - smoothPointer.current.x) * 0.04;
+    smoothPointer.current.y += (pointer.current.y - smoothPointer.current.y) * 0.04;
 
-    // Camera position: slight pan on pointer, dolly on scroll
-    const targetX = smoothPointer.current.x * 0.8;
-    const targetY = smoothPointer.current.y * 0.5 + 0.5;
-    const targetZ = 8 - scrollProgress * 3;
+    // Cinematic camera: orbit slightly with pointer, dolly on scroll
+    const targetX = smoothPointer.current.x * 1.2;
+    const targetY = smoothPointer.current.y * 0.8 + 0.3;
+    const targetZ = 7 - scrollProgress * 4;
 
-    camera.position.x += (targetX - camera.position.x) * 0.03;
-    camera.position.y += (targetY - camera.position.y) * 0.03;
-    camera.position.z += (targetZ - camera.position.z) * 0.03;
+    camera.position.x += (targetX - camera.position.x) * 0.02;
+    camera.position.y += (targetY - camera.position.y) * 0.02;
+    camera.position.z += (targetZ - camera.position.z) * 0.02;
 
-    // Look slightly ahead of center
-    camera.lookAt(0, scrollProgress * -1, -2);
+    camera.lookAt(0, scrollProgress * -0.5, -2);
   });
 
   return null;
