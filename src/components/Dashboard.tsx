@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
+import { AnimatedCard } from "@/components/AnimatedCard";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { YouTubeCard } from "@/components/YouTubeCard";
 import { RedditCard } from "@/components/RedditCard";
@@ -233,7 +235,12 @@ export function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[150px] animate-pulse" />
+        <div className="absolute -right-32 -bottom-32 h-[400px] w-[400px] rounded-full bg-accent/4 blur-[120px]" />
+      </div>
       <Sidebar
         folders={folders}
         selectedFolder={selectedFolder}
@@ -353,27 +360,55 @@ export function Dashboard() {
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          {isLoading ? (
-            <div className="flex justify-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filteredBookmarks.length > 0 ? (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredBookmarks.map(renderBookmarkCard)}
-            </div>
-          ) : (
-            <div className="text-center text-muted-foreground mt-20">
-              <p>No {platformConfig.label} bookmarks found</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => selectedPlatform === 'vault' ? setIsBulkImportOpen(true) : setIsAddModalOpen(true)}
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center h-64"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                {selectedPlatform === 'vault' ? 'Import your first URLs' : `Add your first ${platformConfig.label} bookmark`}
-              </Button>
-            </div>
-          )}
+                <div className="relative">
+                  <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full animate-pulse" />
+                  <Loader2 className="relative h-8 w-8 animate-spin text-primary" />
+                </div>
+              </motion.div>
+            ) : filteredBookmarks.length > 0 ? (
+              <motion.div
+                key={`${selectedPlatform}-${selectedFolder}-${selectedTag}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              >
+                {filteredBookmarks.map((bookmark, i) => (
+                  <AnimatedCard key={bookmark.id} index={i}>
+                    {renderBookmarkCard(bookmark)}
+                  </AnimatedCard>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="text-center text-muted-foreground mt-20"
+              >
+                <p>No {platformConfig.label} bookmarks found</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => selectedPlatform === 'vault' ? setIsBulkImportOpen(true) : setIsAddModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {selectedPlatform === 'vault' ? 'Import your first URLs' : `Add your first ${platformConfig.label} bookmark`}
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AddBookmarkModal

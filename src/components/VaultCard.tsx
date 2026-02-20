@@ -106,7 +106,8 @@ export function VaultCard({
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden transition-all duration-200 hover:shadow-lg border-border/60",
+        "group relative overflow-hidden transition-all duration-300 border-border/60",
+        "hover:shadow-[0_8px_30px_hsl(187_72%_40%/0.12)] hover:border-primary/30",
         bookmark.priority === "pinned" && "ring-1 ring-primary/40",
         bookmark.priority === "important" && "ring-1 ring-yellow-500/40"
       )}
