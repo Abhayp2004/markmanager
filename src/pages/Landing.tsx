@@ -8,7 +8,7 @@ import {
   FolderOpen,
   Search,
   MessageSquare,
-  GitPullRequest,
+  
   FileText,
   BookOpen,
   Shield,
@@ -36,7 +36,7 @@ const PLATFORMS = [
   { name: 'YouTube', icon: <Play className="h-4 w-4" />, color: 'text-red-400' },
   { name: 'Reddit', icon: '⊙', color: 'text-orange-400' },
   { name: 'Medium', icon: 'M', color: 'text-foreground' },
-  { name: 'GitHub', icon: <GitPullRequest className="h-4 w-4" />, color: 'text-foreground' },
+  
   { name: 'Any URL', icon: <Globe className="h-4 w-4" />, color: 'text-primary' },
 ];
 
@@ -44,7 +44,7 @@ const FEATURES = [
   {
     icon: Zap,
     title: 'Multi‑platform capture',
-    desc: 'Save tweets, YouTube videos, Reddit threads, Medium articles, GitHub PRs, and any URL — all funneled into one unified inbox.',
+    desc: 'Save tweets, YouTube videos, Reddit threads, Medium articles, and any URL — all funneled into one unified inbox.',
     detail: 'No more scattered browser tabs. Paste a link and we auto‑detect the platform, pull metadata, thumbnails, and content.',
   },
   {
@@ -56,8 +56,8 @@ const FEATURES = [
   {
     icon: FolderOpen,
     title: 'Dev‑centric workflows',
-    desc: 'Organize PRs, issues, docs, and tutorials into smart collections. Priority pins keep important stuff surfaced.',
-    detail: 'Built for how developers actually work. Tag by project, pin critical references, and export collections as Markdown.',
+    desc: 'Organize docs, tutorials, and references into smart collections. Priority pins keep important stuff surfaced.',
+    detail: 'Built for how developers actually work. Tag by project, pin critical references, and find anything instantly.',
   },
 ];
 
@@ -69,7 +69,7 @@ const AI_CAPABILITIES = [
 ];
 
 const DEV_WORKFLOWS = [
-  { icon: GitPullRequest, label: 'Save PRs & issues', desc: 'Track important GitHub threads across repos' },
+  { icon: Star, label: 'Save references', desc: 'Track important threads and discussions' },
   { icon: BookOpen, label: 'Tutorial collections', desc: 'Group learning resources by topic or stack' },
   { icon: FileText, label: 'Documentation hub', desc: 'Quick‑access your most‑referenced docs' },
 ];
@@ -111,7 +111,7 @@ export default function Landing() {
             </Link>
             <Link to="/auth">
               <Button size="sm" className="gap-1.5">
-                Get started <ArrowRight className="h-3.5 w-3.5" />
+                Sign up <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
@@ -139,7 +139,7 @@ export default function Landing() {
             className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1] max-w-3xl mx-auto"
           >
             One inbox for your{' '}
-            <span className="text-gradient">X, YouTube, GitHub & articles</span>
+            <span className="text-gradient">X, YouTube, Reddit & articles</span>
             {' '}— with smart search and summaries.
           </motion.h1>
 
@@ -343,7 +343,7 @@ export default function Landing() {
             </motion.h2>
 
             <motion.p variants={fadeUp} custom={2} className="text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
-              I was tired of losing great tweets, tutorials, and GitHub threads across 10 tabs.
+              I was tired of losing great tweets, tutorials, and threads across 10 tabs.
               So I built the tool I wanted. MarkManager is opinionated, fast, and designed for how developers actually consume content.
             </motion.p>
 
@@ -391,7 +391,7 @@ export default function Landing() {
             </p>
             <Link to="/auth">
               <Button size="lg" className="gap-2 px-8 h-12 text-base">
-                Get started — it's free <ArrowRight className="h-4 w-4" />
+                Sign up — it's free <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </motion.div>
