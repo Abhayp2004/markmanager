@@ -339,7 +339,7 @@ export default function Landing() {
 
             <motion.p variants={fadeUp} custom={2} className="text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
               I was tired of losing great tweets, tutorials, and threads across 10 tabs.
-              So I built the tool I wanted. MarkManager is opinionated, fast, and designed for how developers actually consume content.
+              So I built the tool I wanted. MarkManager is opinionated, fast, and designed for how everyone actually consumes content.
             </motion.p>
 
             <motion.a
