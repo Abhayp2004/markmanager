@@ -268,15 +268,6 @@ export default function Auth() {
                 </button>
               </div>
 
-              {/* Demo link */}
-              <div className="mt-4 text-center">
-                <Link
-                  to="/demo"
-                  className="text-xs text-muted-foreground/70 hover:text-primary transition-colors underline underline-offset-2"
-                >
-                  Try the demo — no account needed
-                </Link>
-              </div>
             </div>
 
             {/* Footer links */}

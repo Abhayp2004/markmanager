@@ -7,7 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Component, ReactNode } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Demo from "./pages/Demo";
+
 import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -60,7 +60,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/demo" element={<Demo />} />
+              
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
