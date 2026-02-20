@@ -20,7 +20,7 @@ import {
   Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GeometricBackground } from '@/components/GeometricBackground';
+import { HeroScene } from '@/components/hero/HeroScene';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -83,7 +83,7 @@ const TRUST = [
 export default function Landing() {
   return (
     <div className="relative min-h-screen ocean-gradient-bg overflow-hidden">
-      <GeometricBackground />
+      <HeroScene />
 
       {/* Ambient glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
