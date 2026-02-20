@@ -134,14 +134,16 @@ export default function Auth() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl glass-card-elevated glow-ring">
-              <Layers className="h-8 w-8 text-primary" />
-            </div>
+            <div className="flex flex-col items-center lg:items-start gap-4">
+              <div className="inline-flex h-20 w-20 items-center justify-center rounded-2xl glass-card-elevated glow-ring">
+                <Layers className="h-10 w-10 text-primary" />
+              </div>
 
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
-              <span className="text-gradient">Mark</span>
-              <span className="font-light italic tracking-wide">Manager</span>
-            </h1>
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight text-center lg:text-left">
+                <span className="text-gradient">Mark</span>
+                <span className="font-light italic tracking-wide">Manager</span>
+              </h1>
+            </div>
 
             <p className="mt-4 text-lg text-muted-foreground max-w-md leading-relaxed">
               The unified bookmark manager that makes saving, organizing,
