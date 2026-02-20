@@ -126,7 +126,7 @@ export default function Auth() {
       </div>
 
       {/* Main content: split layout on desktop */}
-      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
+      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row lg:items-center">
         {/* Left side — branding & value prop */}
         <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
           <motion.div
