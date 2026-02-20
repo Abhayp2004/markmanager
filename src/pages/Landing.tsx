@@ -55,9 +55,9 @@ const FEATURES = [
   },
   {
     icon: FolderOpen,
-    title: 'Dev‑centric workflows',
-    desc: 'Organize docs, tutorials, and references into smart collections. Priority pins keep important stuff surfaced.',
-    detail: 'Built for how developers actually work. Tag by project, pin critical references, and find anything instantly.',
+    title: 'Smart collections',
+    desc: 'Organize docs, tutorials, and references into folders. Priority pins keep important stuff surfaced.',
+    detail: 'Tag by topic, pin critical references, and find anything instantly with powerful filters.',
   },
 ];
 
@@ -105,13 +105,8 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/auth">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                Sign in
-              </Button>
-            </Link>
-            <Link to="/auth">
               <Button size="sm" className="gap-1.5">
-                Sign up <ArrowRight className="h-3.5 w-3.5" />
+                Sign in / Sign up <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
@@ -127,7 +122,7 @@ export default function Landing() {
           >
             <div className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-1.5 text-xs text-muted-foreground mb-8">
               <Star className="h-3 w-3 text-primary" />
-              Built by a dev, for devs
+              Built for everyone
             </div>
           </motion.div>
 
@@ -339,7 +334,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.h2 variants={fadeUp} custom={1} className="text-3xl font-bold text-foreground mb-4">
-              Built by a dev, for devs
+              Built for everyone
             </motion.h2>
 
             <motion.p variants={fadeUp} custom={2} className="text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
