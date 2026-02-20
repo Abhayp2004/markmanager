@@ -126,17 +126,17 @@ export default function Auth() {
       </div>
 
       {/* Main content: split layout on desktop */}
-      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row lg:items-center">
+      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row lg:items-center lg:justify-center">
         {/* Left side — branding & value prop */}
-        <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
+        <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 lg:max-w-xl">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <div className="flex flex-col items-center lg:items-start gap-4">
-              <div className="inline-flex h-20 w-20 items-center justify-center rounded-2xl glass-card-elevated glow-ring">
-                <Layers className="h-10 w-10 text-primary" />
+            <div className="flex flex-col items-center lg:items-start gap-3">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl glass-card-elevated glow-ring">
+                <Layers className="h-8 w-8 text-primary" />
               </div>
 
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight text-center lg:text-left">
@@ -145,27 +145,27 @@ export default function Auth() {
               </h1>
             </div>
 
-            <p className="mt-4 text-lg text-muted-foreground max-w-md leading-relaxed">
+            <p className="mt-3 text-lg text-muted-foreground max-w-md leading-relaxed">
               The unified bookmark manager that makes saving, organizing,
               and rediscovering content effortless.
             </p>
 
             {/* Feature bullets */}
-            <div className="mt-10 space-y-5 max-w-md">
+            <div className="mt-8 space-y-4 max-w-md">
               {FEATURES.map((f, i) => (
                 <motion.div
                   key={f.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                  className="flex items-start gap-4"
+                  className="flex items-start gap-3"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <f.icon className="h-5 w-5" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <f.icon className="h-4 w-4" />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">{f.title}</h3>
-                    <p className="text-sm text-muted-foreground">{f.desc}</p>
+                    <p className="text-xs text-muted-foreground">{f.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -176,14 +176,14 @@ export default function Auth() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.4 }}
-              className="mt-10 flex flex-wrap gap-4"
+              className="mt-6 flex flex-wrap gap-3"
             >
               {TRUST_POINTS.map((t) => (
                 <div
                   key={t.text}
-                  className="flex items-center gap-2 text-xs text-muted-foreground/80"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground/80"
                 >
-                  <t.icon className="h-3.5 w-3.5 text-primary/60" />
+                  <t.icon className="h-3 w-3 text-primary/60" />
                   {t.text}
                 </div>
               ))}
@@ -192,7 +192,7 @@ export default function Auth() {
         </div>
 
         {/* Right side — auth form */}
-        <div className="flex flex-1 items-center justify-center px-6 py-12 lg:px-16">
+        <div className="flex items-center justify-center px-6 py-12 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
