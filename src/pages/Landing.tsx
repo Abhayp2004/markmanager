@@ -135,7 +135,7 @@ export default function Landing() {
           >
             One inbox for all your{' '}
             <span className="text-gradient">important bookmarks & links</span>
-            {' '}across multiple platforms — with smart search and summaries.
+            {' '}across multiple platforms with smart search and summaries.
           </motion.h1>
 
           <motion.p
