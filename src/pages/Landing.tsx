@@ -133,9 +133,9 @@ export default function Landing() {
             custom={1}
             className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1] max-w-3xl mx-auto"
           >
-            One inbox for your{' '}
-            <span className="text-gradient">X, YouTube, Reddit & articles</span>
-            {' '}— with smart search and summaries.
+            One inbox for all your{' '}
+            <span className="text-gradient">important bookmarks & links</span>
+            {' '}across multiple platforms — with smart search and summaries.
           </motion.h1>
 
           <motion.p
