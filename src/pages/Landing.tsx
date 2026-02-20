@@ -208,9 +208,9 @@ export default function Landing() {
               {/* Mock bookmark cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { platform: '𝕏', title: 'React Server Components deep dive', tags: ['react', 'rsc'], time: '2h ago' },
-                  { platform: '▶', title: 'Building a CLI in Rust — full tutorial', tags: ['rust', 'cli'], time: '5h ago' },
-                  { platform: '⊙', title: 'r/webdev: Best practices for API design in 2025', tags: ['api', 'webdev'], time: '1d ago' },
+                  { platform: '𝕏', title: 'The future of AI agents in software development', tags: ['ai', 'tech'], time: '2h ago' },
+                  { platform: '𝕏', title: 'Why crypto markets are shifting towards DeFi', tags: ['crypto', 'business'], time: '5h ago' },
+                  { platform: '𝕏', title: 'Science behind meditation and productivity', tags: ['science', 'spiritual'], time: '1d ago' },
                 ].map((b, i) => (
                   <motion.div
                     key={i}
