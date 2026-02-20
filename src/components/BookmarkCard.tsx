@@ -90,12 +90,12 @@ export function BookmarkCard({
     <div
       className={cn(
         'group relative overflow-hidden rounded-xl border bg-card transition-all duration-300',
-        'hover:shadow-card',
+        'hover:shadow-[0_8px_30px_hsl(187_72%_40%/0.12)] hover:border-primary/30',
         bookmark.priority === 'pinned' && 'border-yellow-400/60',
         bookmark.priority === 'important' && 'border-orange-400/60',
         bookmark.priority === 'reference' && 'border-blue-400/60',
         (!bookmark.priority || bookmark.priority === 'normal') &&
-          'border-border hover:border-primary/30'
+          'border-border'
       )}
     >
       {/* Priority badge */}

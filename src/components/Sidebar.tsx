@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -195,14 +196,23 @@ export function Sidebar({
                 key={platform}
                 onClick={() => handleSelectPlatform(platform)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   selectedPlatform === platform
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    ? "text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                 )}
               >
-                {PLATFORM_ICONS[platform]}
-                {PLATFORM_CONFIG[platform].label}
+                {selectedPlatform === platform && (
+                  <motion.div
+                    layoutId="activePlatform"
+                    className="absolute inset-0 bg-sidebar-accent rounded-lg"
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-3">
+                  {PLATFORM_ICONS[platform]}
+                  {PLATFORM_CONFIG[platform].label}
+                </span>
               </button>
             ))}
           </div>
