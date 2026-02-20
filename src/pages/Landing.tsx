@@ -82,7 +82,7 @@ const TRUST = [
 
 export default function Landing() {
   return (
-    <div className="relative min-h-screen ocean-gradient-bg overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden" style={{ background: 'transparent' }}>
       <HeroScene />
 
       {/* Ambient glow */}
