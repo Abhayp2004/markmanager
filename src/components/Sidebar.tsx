@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -11,6 +12,7 @@ import {
   X,
   Loader2,
   Play,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -310,7 +312,14 @@ export function Sidebar({
       </nav>
 
       {/* User section - Fixed at bottom with spacing */}
-      <div className="border-t border-border px-4 pt-4 pb-10 shrink-0 flex-shrink-0">
+      <div className="border-t border-border px-4 pt-3 pb-10 shrink-0 flex-shrink-0 space-y-1">
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-colors"
+        >
+          <Settings className="h-4 w-4" />
+          Settings
+        </Link>
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
             {user?.email?.charAt(0).toUpperCase()}
