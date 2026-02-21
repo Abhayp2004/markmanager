@@ -127,9 +127,9 @@ export default function Auth() {
       </div>
 
       {/* Main content: split layout on desktop */}
-      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row lg:items-center lg:justify-center">
+      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row lg:items-stretch lg:justify-center">
         {/* Left side — branding & value prop */}
-        <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 lg:max-w-xl">
+        <div className="flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 lg:max-w-xl lg:flex-1">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -193,7 +193,7 @@ export default function Auth() {
         </div>
 
         {/* Right side — auth form */}
-        <div className="flex items-center justify-center px-6 py-12 lg:px-16">
+        <div className="flex items-center justify-center px-6 py-12 lg:px-16 lg:flex-1">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
