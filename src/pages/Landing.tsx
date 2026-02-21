@@ -390,6 +390,25 @@ export default function Landing() {
               </Button>
             </Link>
           </motion.div>
+
+          {/* Support box */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="max-w-md mx-auto mt-6 text-center glass-card rounded-xl p-6 flex flex-col items-center gap-3"
+          >
+            <p className="text-sm font-medium text-foreground">Help me support the cause ❤️</p>
+            <a
+              href="https://buymeacoffee.com/abhxy03"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
+            >
+              ☕ Buy me a coffee <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </motion.div>
         </section>
 
         {/* ── Footer ── */}
@@ -400,11 +419,7 @@ export default function Landing() {
               <span>MarkManager</span>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground/50">
-            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
-              <span>·</span>
-              <a href="https://buymeacoffee.com/abhxy03" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                Buy me a coffee ☕
-              </a>
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
               <span>·</span>
               <a href="https://x.com/abhxy03" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                 By Abhay Parekh
