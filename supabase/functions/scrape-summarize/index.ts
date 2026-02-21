@@ -5,6 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const GEMINI_MODEL = "gemini-2.5-pro";
+
+async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string) {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 4096,
+      },
+    }),
+  });
+  return response;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,9 +41,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     console.log('Scraping URL:', url);
@@ -71,7 +92,7 @@ serve(async (req) => {
     const contentToAnalyze = [
       title && `Title: ${title}`,
       description && `Description: ${description}`,
-      pageContent && `Content: ${pageContent.substring(0, 8000)}`,
+      pageContent && `Content: ${pageContent.substring(0, 12000)}`,
       `URL: ${url}`,
     ].filter(Boolean).join('\n\n');
 
@@ -82,38 +103,21 @@ serve(async (req) => {
       'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
     ];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a web content analyzer. Given a webpage's metadata, provide:
+    const systemPrompt = `You are a web content analyzer. Given a webpage's metadata, provide:
 1. A detailed summary (4-8 sentences) covering the main topics, key arguments, conclusions, and any notable insights
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
-{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}`
-          },
-          {
-            role: "user",
-            content: `Content to analyze:\n${contentToAnalyze}`
-          }
-        ],
-      }),
-    });
+{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}`;
+
+    const response = await callGemini(GEMINI_API_KEY, systemPrompt, `Content to analyze:\n${contentToAnalyze}`);
 
     let summary = description || '';
     let tags = ['other'];
 
     if (response.ok) {
       const data = await response.json();
-      const aiMessage = data.choices?.[0]?.message?.content || '';
+      const aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       try {
         const jsonMatch = aiMessage.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -129,7 +133,7 @@ Respond ONLY with valid JSON:
       }
     } else {
       const errText = await response.text();
-      console.error('AI gateway error:', response.status, errText);
+      console.error('Gemini error:', response.status, errText);
     }
 
     return new Response(JSON.stringify({
