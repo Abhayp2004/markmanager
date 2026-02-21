@@ -2,15 +2,35 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const GEMINI_MODEL = "gemini-2.5-pro";
 
 const AVAILABLE_TAGS = [
   'tech', 'ai', 'crypto', 'sports', 'funny', 'news', 'politics', 
   'science', 'business', 'lifestyle', 'entertainment', 'education',
   'health', 'art', 'music', 'gaming', 'travel', 'food', 'motivation', 
-  'spiritual', 'other'
+  'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
 ];
+
+async function callGemini(apiKey: string, prompt: string) {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        { role: "user", parts: [{ text: prompt }] }
+      ],
+      generationConfig: { maxOutputTokens: 4096 },
+    }),
+  });
+  return response;
+}
+
+function extractGeminiText(data: any): string {
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,10 +39,10 @@ serve(async (req) => {
 
   try {
     const { action, content, query, bookmarks, tweetUrl, platform: reqPlatform } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     if (action === 'analyze') {
@@ -69,45 +89,26 @@ serve(async (req) => {
 
       console.log('Analyzing content for tags:', textToAnalyze?.substring(0, 100));
       
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are a tweet categorization assistant. Analyze the tweet content and assign 1-3 relevant tags from this list: ${AVAILABLE_TAGS.join(', ')}.
+      const prompt = `You are a tweet categorization assistant. Analyze the tweet content and assign 1-3 relevant tags from this list: ${AVAILABLE_TAGS.join(', ')}.
               
-              Even if content is limited, make your best guess based on any available information like usernames, keywords, or context.
-              
-              Respond ONLY with a JSON object in this exact format:
-              {"tags": ["tag1", "tag2"], "summary": "brief one-sentence summary of the tweet"}`
-            },
-            {
-              role: "user",
-              content: `Analyze this tweet and categorize it:\n\n${textToAnalyze || 'Unknown tweet content'}`
-            }
-          ],
-        }),
-      });
+Even if content is limited, make your best guess based on any available information like usernames, keywords, or context.
+
+Respond ONLY with a JSON object in this exact format:
+{"tags": ["tag1", "tag2"], "summary": "brief one-sentence summary of the tweet"}
+
+Analyze this tweet and categorize it:
+
+${textToAnalyze || 'Unknown tweet content'}`;
+
+      const response = await callGemini(GEMINI_API_KEY, prompt);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('AI gateway error:', response.status, errorText);
+        console.error('Gemini error:', response.status, errorText);
         
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
             status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (response.status === 402) {
-          return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-            status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
@@ -118,7 +119,7 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      const assistantMessage = data.choices?.[0]?.message?.content || '';
+      const assistantMessage = extractGeminiText(data);
       console.log('AI response:', assistantMessage);
 
       try {
@@ -160,7 +161,6 @@ serve(async (req) => {
               textToSummarize = oembedData.html?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             }
           } else if (platform === 'medium') {
-            // Extract title from URL slug for Medium (page fetch often blocked)
             try {
               const urlObj = new URL(tweetUrl);
               const pathParts = urlObj.pathname.split('/').filter(Boolean);
@@ -178,7 +178,6 @@ serve(async (req) => {
               console.log('URL parsing failed for Medium:', e);
             }
           } else {
-            // For LinkedIn, Reddit, etc. - use noembed
             try {
               const noembedResponse = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(tweetUrl)}`);
               if (noembedResponse.ok) {
@@ -209,18 +208,7 @@ serve(async (req) => {
       };
       const platformLabel = platformLabels[platform] || 'content';
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are a detailed content summarizer. Given a ${platformLabel}, provide a thorough and well-structured summary in 4-6 sentences. 
+      const prompt = `You are a detailed content summarizer. Given a ${platformLabel}, provide a thorough and well-structured summary in 4-6 sentences. 
 
 Your summary should:
 - Start with the main topic or thesis
@@ -231,27 +219,20 @@ Your summary should:
 
 If the content is limited, infer what you can from context clues like the URL, author, or keywords.
 
-Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
-            },
-            {
-              role: "user",
-              content: `Summarize this ${platformLabel}:\n\n${textToSummarize}`
-            }
-          ],
-        }),
-      });
+Respond ONLY with a JSON object: {"summary": "your detailed summary here"}
+
+Summarize this ${platformLabel}:
+
+${textToSummarize}`;
+
+      const response = await callGemini(GEMINI_API_KEY, prompt);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('AI gateway error:', response.status, errorText);
+        console.error('Gemini error:', response.status, errorText);
         if (response.status === 429) {
           return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
             status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (response.status === 402) {
-          return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
         return new Response(JSON.stringify({ summary: '' }), {
@@ -260,7 +241,7 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       }
 
       const data = await response.json();
-      const assistantMessage = data.choices?.[0]?.message?.content || '';
+      const assistantMessage = extractGeminiText(data);
       console.log('Summary response:', assistantMessage);
 
       try {
@@ -292,28 +273,16 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
         `[${i}] Author: ${b.author_name || 'Unknown'}, URL: ${b.tweet_url}, Tags: ${(b.tags || []).join(', ')}, Content: ${b.content || 'No content'}`
       ).join('\n\n');
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are a semantic search assistant. Given a search query and a list of bookmarks, return the indices of bookmarks that are semantically relevant to the query. Consider meaning, topics, and intent - not just keyword matching.
+      const prompt = `You are a semantic search assistant. Given a search query and a list of bookmarks, return the indices of bookmarks that are semantically relevant to the query. Consider meaning, topics, and intent - not just keyword matching.
               
-              Respond ONLY with a JSON array of indices, e.g., [0, 2, 5]. Return an empty array if no relevant results found.`
-            },
-            {
-              role: "user",
-              content: `Search query: "${query}"\n\nBookmarks:\n${bookmarkContext}`
-            }
-          ],
-        }),
-      });
+Respond ONLY with a JSON array of indices, e.g., [0, 2, 5]. Return an empty array if no relevant results found.
+
+Search query: "${query}"
+
+Bookmarks:
+${bookmarkContext}`;
+
+      const response = await callGemini(GEMINI_API_KEY, prompt);
 
       if (!response.ok) {
         console.error('Semantic search error:', response.status);
@@ -323,7 +292,7 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       }
 
       const data = await response.json();
-      const assistantMessage = data.choices?.[0]?.message?.content || '';
+      const assistantMessage = extractGeminiText(data);
       console.log('Search response:', assistantMessage);
 
       try {
@@ -346,7 +315,6 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else if (action === 'fetch-meta') {
-      // Fetch og:image and og:title from a URL (for Medium etc. that block client CORS)
       if (!tweetUrl) {
         return new Response(JSON.stringify({ error: 'URL required' }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -357,7 +325,6 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       let ogTitle = '';
       let ogDescription = '';
       
-      // Use microlink.io API to extract meta (works where direct fetch is blocked)
       try {
         const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(tweetUrl)}`;
         const response = await fetch(microlinkUrl);
@@ -382,7 +349,6 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       });
 
     } else if (action === 'fetch-reddit') {
-      // Fetch Reddit post metadata using Reddit's JSON API (server-side to bypass CORS)
       if (!tweetUrl) {
         return new Response(JSON.stringify({ error: 'URL required' }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -395,7 +361,6 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
       let subreddit = '';
 
       try {
-        // Clean up the URL - remove query params and add .json
         const urlObj = new URL(tweetUrl);
         const cleanPath = urlObj.pathname.replace(/\/$/, '');
         const jsonUrl = `https://www.reddit.com${cleanPath}.json`;
@@ -409,18 +374,15 @@ Respond ONLY with a JSON object: {"summary": "your detailed summary here"}`
 
         if (response.ok) {
           const data = await response.json();
-          // Reddit returns an array: [post listing, comments listing]
           const postData = data?.[0]?.data?.children?.[0]?.data;
           if (postData) {
             title = postData.title || '';
             author = postData.author || '';
             subreddit = postData.subreddit_name_prefixed || '';
-            // Reddit thumbnails: skip 'self', 'default', 'nsfw', 'spoiler'
             const thumb = postData.thumbnail || '';
             if (thumb && thumb.startsWith('http')) {
               thumbnail = thumb;
             }
-            // Try preview images for higher quality
             const previewImage = postData.preview?.images?.[0]?.source?.url;
             if (previewImage) {
               thumbnail = previewImage.replace(/&amp;/g, '&');

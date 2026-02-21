@@ -5,6 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const GEMINI_MODEL = "gemini-2.5-pro";
+
+async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string) {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 4096,
+      },
+    }),
+  });
+  return response;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,9 +41,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     // If we have a URL but limited content, try fetching more
@@ -55,21 +76,9 @@ serve(async (req) => {
       });
     }
 
-    // Truncate to fit context window
-    const truncatedContent = docContent.substring(0, 20000);
+    const truncatedContent = docContent.substring(0, 30000);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
+    const systemPrompt = `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
 
 Your approach:
 1. **Read thoroughly** — understand the full document before responding.
@@ -80,15 +89,11 @@ Your approach:
 6. For summary/takeaway requests, structure as: **Main Thesis** → **Key Arguments** → **Evidence** → **Conclusions**.
 7. Give actionable, insightful answers — don't just restate the text, add analytical depth.
 
-IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.`
-          },
-          {
-            role: "user",
-            content: `Document content:\n${truncatedContent}\n\nUser question: ${question}`
-          }
-        ],
-      }),
-    });
+IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.`;
+
+    const userPrompt = `Document content:\n${truncatedContent}\n\nUser question: ${question}`;
+
+    const response = await callGemini(GEMINI_API_KEY, systemPrompt, userPrompt);
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -97,19 +102,13 @@ IMPORTANT: Answer based ONLY on the provided document. Never fabricate informati
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
       const errText = await response.text();
-      console.error('AI gateway error:', response.status, errText);
+      console.error('Gemini error:', response.status, errText);
       throw new Error('AI request failed');
     }
 
     const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || 'No answer generated.';
+    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No answer generated.';
 
     return new Response(JSON.stringify({ answer }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
