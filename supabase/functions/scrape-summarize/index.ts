@@ -103,8 +103,18 @@ serve(async (req) => {
       'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
     ];
 
-    const systemPrompt = `You are a web content analyzer. Given a webpage's metadata, provide:
-1. A detailed summary (4-8 sentences) covering the main topics, key arguments, conclusions, and any notable insights
+    const systemPrompt = `You are an expert web content analyzer with deep knowledge of technology, science, and industry terminology.
+
+CRITICAL RULES:
+- Read the ENTIRE document thoroughly before summarizing. Do NOT rely on surface-level keyword matching.
+- Understand acronyms and abbreviations IN CONTEXT. For example:
+  - "MCP" in AI/tech context = "Model Context Protocol" (NOT "Master Control Program" or "Microsoft Certified Professional")
+  - Always interpret terms based on the surrounding content, not generic definitions.
+- If the document discusses a specific technology, protocol, or framework, your summary MUST accurately reflect what that technology actually is and does.
+- Do NOT confuse similarly named but different concepts. Always use the full expanded form of acronyms at least once.
+
+Provide:
+1. A detailed summary (4-8 sentences) that accurately captures the main topics, key arguments, conclusions, and notable insights. Use correct terminology and expanded acronyms.
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
