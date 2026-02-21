@@ -400,7 +400,11 @@ export default function Landing() {
               <span>MarkManager</span>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground/50">
-              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+              <span>·</span>
+              <a href="https://buymeacoffee.com/abhxy03" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                Buy me a coffee ☕
+              </a>
               <span>·</span>
               <a href="https://x.com/abhxy03" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                 By Abhay Parekh
