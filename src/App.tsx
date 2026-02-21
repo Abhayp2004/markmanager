@@ -60,7 +60,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              
+              <Route path="/~oauth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
