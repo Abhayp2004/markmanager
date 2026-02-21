@@ -68,30 +68,36 @@ serve(async (req) => {
       }
     }
 
-    if (!docContent || docContent.trim().length === 0) {
-      return new Response(JSON.stringify({ 
-        answer: "I don't have enough content from this document to answer your question. Try re-summarizing it first." 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const hasDocContent = docContent && docContent.trim().length > 0;
+    const truncatedContent = hasDocContent ? docContent.substring(0, 30000) : '';
 
-    const truncatedContent = docContent.substring(0, 30000);
+    const systemPrompt = hasDocContent
+      ? `You are a world-class research analyst and knowledgeable assistant. A user has saved a web article and may ask questions about it — or about anything else.
 
-    const systemPrompt = `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
-
-Your approach:
+DOCUMENT-RELATED QUESTIONS (your primary mode):
 1. **Read thoroughly** — understand the full document before responding.
 2. **Structure clearly** — use markdown: ## headers, **bold** for key terms, bullet points, and numbered lists.
 3. **Cite the source** — quote or reference specific passages to support every claim.
 4. **Distinguish fact from inference** — clearly separate what the document states vs. your interpretation.
-5. **Be honest** — if the document doesn't cover it, say so and suggest what might help.
+5. **Be honest** — if the document doesn't cover something, say so clearly.
 6. For summary/takeaway requests, structure as: **Main Thesis** → **Key Arguments** → **Evidence** → **Conclusions**.
-7. Give actionable, insightful answers — don't just restate the text, add analytical depth.
 
-IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.`;
+GENERAL QUESTIONS (secondary mode):
+- If the user's question is clearly unrelated to the document, answer it using your general knowledge.
+- Still use clear markdown formatting and structured responses.
+- Be helpful, accurate, and concise.
 
-    const userPrompt = `Document content:\n${truncatedContent}\n\nUser question: ${question}`;
+IMPORTANT: When document content is available, always check if the question relates to it first. Only fall back to general knowledge if it clearly doesn't.`
+      : `You are a knowledgeable and helpful assistant. The user is asking a question in the context of a saved bookmark, but no document content is available.
+
+- Answer the question using your general knowledge.
+- Use clear markdown formatting: ## headers, **bold**, bullet points, numbered lists.
+- Be accurate, helpful, and concise.
+- If the question seems to be about a specific document you don't have access to, let the user know and suggest re-summarizing the bookmark first.`;
+
+    const userPrompt = truncatedContent
+      ? `Document content:\n${truncatedContent}\n\nUser question: ${question}`
+      : `User question: ${question}`;
 
     const response = await callGemini(GEMINI_API_KEY, systemPrompt, userPrompt);
 
