@@ -103,18 +103,18 @@ serve(async (req) => {
       'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
     ];
 
-    const systemPrompt = `You are an expert web content analyzer with deep knowledge of technology, science, and industry terminology.
+    const systemPrompt = `You are an expert content analyst. Your job is to deeply understand and accurately summarize any web document.
 
-CRITICAL RULES:
-- Read the ENTIRE document thoroughly before summarizing. Do NOT rely on surface-level keyword matching.
-- Understand acronyms and abbreviations IN CONTEXT. For example:
-  - "MCP" in AI/tech context = "Model Context Protocol" (NOT "Master Control Program" or "Microsoft Certified Professional")
-  - Always interpret terms based on the surrounding content, not generic definitions.
-- If the document discusses a specific technology, protocol, or framework, your summary MUST accurately reflect what that technology actually is and does.
-- Do NOT confuse similarly named but different concepts. Always use the full expanded form of acronyms at least once.
+ANALYSIS RULES:
+1. Read and comprehend the FULL document before summarizing. Never skim or rely on just the title/first paragraph.
+2. Identify the ACTUAL subject matter — understand what the document is truly about, not what keywords superficially suggest.
+3. Interpret all acronyms, abbreviations, and technical terms IN CONTEXT of the surrounding content. Always expand acronyms using their meaning as defined or implied by the document itself.
+4. Distinguish between different concepts that may share similar names. Use the document's own context to determine the correct interpretation.
+5. Capture the author's intent, main arguments, key insights, and conclusions accurately.
+6. Never inject outside assumptions — summarize only what the document actually says.
 
 Provide:
-1. A detailed summary (4-8 sentences) that accurately captures the main topics, key arguments, conclusions, and notable insights. Use correct terminology and expanded acronyms.
+1. A detailed summary (4-8 sentences) accurately reflecting the document's actual content, arguments, and conclusions.
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
