@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -20,9 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     console.log('Scraping URL:', url);
@@ -82,27 +82,29 @@ serve(async (req) => {
       'spiritual', 'design', 'programming', 'finance', 'productivity', 'other'
     ];
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        contents: [
+        model: "google/gemini-3-flash-preview",
+        messages: [
           {
-            role: "user",
-            parts: [{ text: `You are a web content analyzer. Given a webpage's metadata, provide:
+            role: "system",
+            content: `You are a web content analyzer. Given a webpage's metadata, provide:
 1. A detailed summary (4-8 sentences) covering the main topics, key arguments, conclusions, and any notable insights
 2. 1-3 relevant tags from: ${AVAILABLE_TAGS.join(', ')}
 
 Respond ONLY with valid JSON:
-{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}
-
-Content to analyze:
-${contentToAnalyze}` }]
+{"summary": "your detailed summary here", "tags": ["tag1", "tag2"]}`
+          },
+          {
+            role: "user",
+            content: `Content to analyze:\n${contentToAnalyze}`
           }
         ],
-        generationConfig: {
-          maxOutputTokens: 4096,
-        },
       }),
     });
 
@@ -111,7 +113,7 @@ ${contentToAnalyze}` }]
 
     if (response.ok) {
       const data = await response.json();
-      const aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const aiMessage = data.choices?.[0]?.message?.content || '';
       try {
         const jsonMatch = aiMessage.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -125,6 +127,9 @@ ${contentToAnalyze}` }]
       } catch (e) {
         console.log('AI parse error:', e);
       }
+    } else {
+      const errText = await response.text();
+      console.error('AI gateway error:', response.status, errText);
     }
 
     return new Response(JSON.stringify({

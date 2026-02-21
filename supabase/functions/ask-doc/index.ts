@@ -20,9 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // If we have a URL but limited content, try fetching more
@@ -58,14 +58,18 @@ serve(async (req) => {
     // Truncate to fit context window
     const truncatedContent = docContent.substring(0, 20000);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        contents: [
+        model: "google/gemini-3-flash-preview",
+        messages: [
           {
-            role: "user",
-            parts: [{ text: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
+            role: "system",
+            content: `You are a world-class research analyst specializing in deep document comprehension. A user has saved a web article and needs expert-level answers.
 
 Your approach:
 1. **Read thoroughly** — understand the full document before responding.
@@ -76,17 +80,13 @@ Your approach:
 6. For summary/takeaway requests, structure as: **Main Thesis** → **Key Arguments** → **Evidence** → **Conclusions**.
 7. Give actionable, insightful answers — don't just restate the text, add analytical depth.
 
-IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.
-
-Document content:
-${truncatedContent}
-
-User question: ${question}` }]
+IMPORTANT: Answer based ONLY on the provided document. Never fabricate information.`
+          },
+          {
+            role: "user",
+            content: `Document content:\n${truncatedContent}\n\nUser question: ${question}`
           }
         ],
-        generationConfig: {
-          maxOutputTokens: 4096,
-        },
       }),
     });
 
@@ -97,13 +97,19 @@ User question: ${question}` }]
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       const errText = await response.text();
-      console.error('Gemini error:', response.status, errText);
+      console.error('AI gateway error:', response.status, errText);
       throw new Error('AI request failed');
     }
 
     const data = await response.json();
-    const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No answer generated.';
+    const answer = data.choices?.[0]?.message?.content || 'No answer generated.';
 
     return new Response(JSON.stringify({ answer }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
