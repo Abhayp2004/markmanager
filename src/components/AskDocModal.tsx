@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Dialog,
   DialogContent,
@@ -102,13 +103,17 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
                 <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && <Bot className="h-5 w-5 text-primary shrink-0 mt-1" />}
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap ${
+                    className={`rounded-lg px-3 py-2 text-sm max-w-[85%] ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-foreground"
+                        ? "bg-primary text-primary-foreground whitespace-pre-wrap"
+                        : "bg-secondary text-foreground prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                     }`}
                   >
-                    {msg.content}
+                    {msg.role === "assistant" ? (
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                   {msg.role === "user" && <User className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />}
                 </div>
