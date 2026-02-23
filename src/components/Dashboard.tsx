@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import mediumIcon from '@/assets/medium_icon.jpg';
+import redditIcon from '@/assets/reddit_icon.png';
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { AnimatedCard } from "@/components/AnimatedCard";
@@ -47,7 +48,7 @@ const priorityOrder: Record<string, number> = {
 const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-xl">𝕏</span>,
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
-  reddit: <span className="text-xl">🔴</span>,
+  reddit: <img src={redditIcon} alt="Reddit" className="h-6 w-6 rounded object-contain" />,
   medium: <img src={mediumIcon} alt="Medium" className="h-6 w-6 rounded object-cover" />,
   vault: <span className="text-xl">🌐</span>,
 };
