@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import mediumIcon from '@/assets/medium_icon.jpg';
+import redditIcon from '@/assets/reddit_icon.png';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import {
@@ -53,8 +55,8 @@ const staggerItem = {
 const PLATFORMS = [
   { name: 'Twitter / X', icon: '𝕏', color: 'text-foreground' },
   { name: 'YouTube', icon: <Play className="h-4 w-4" />, color: 'text-red-400' },
-  { name: 'Reddit', icon: '⊙', color: 'text-orange-400' },
-  { name: 'Medium', icon: 'M', color: 'text-foreground' },
+  { name: 'Reddit', icon: <img src={redditIcon} alt="Reddit" className="h-4 w-4 object-contain" />, color: '' },
+  { name: 'Medium', icon: <img src={mediumIcon} alt="Medium" className="h-4 w-4 rounded object-cover" />, color: '' },
   { name: 'Any URL', icon: <Globe className="h-4 w-4" />, color: 'text-primary' },
 ];
 
