@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import mediumLogo from '@/assets/medium_logo.jpg';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-base">𝕏</span>,
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
   reddit: <span className="text-base">🔴</span>,
-  medium: <span className="text-base">📝</span>,
+  medium: <img src={mediumLogo} alt="Medium" className="h-4 w-auto dark:invert" />,
   vault: <span className="text-base">🌐</span>,
 };
 
