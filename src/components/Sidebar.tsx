@@ -42,7 +42,7 @@ interface SidebarProps {
 const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-base">𝕏</span>,
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
-  reddit: <img src={redditIcon} alt="Reddit" className="h-5 w-5 rounded object-contain" />,
+  reddit: <img src={redditIcon} alt="Reddit" className="h-7 w-7 -m-1 rounded object-contain" />,
   medium: <img src={mediumIcon} alt="Medium" className="h-5 w-5 rounded object-cover" style={{ objectPosition: 'center center' }} />,
   vault: <span className="text-base">🌐</span>,
 };
