@@ -82,47 +82,63 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/50">
           <DialogTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-5 w-5 text-primary" />
             Ask about — <span className="text-muted-foreground font-normal truncate">{bookmark.author_name || domain}</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 min-h-[200px] max-h-[400px] overflow-y-auto pr-2">
+        <div className="flex-1 min-h-[250px] max-h-[500px] overflow-y-auto px-5 py-4">
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
+            <div className="text-center text-muted-foreground text-sm py-16 space-y-2">
               <Bot className="h-10 w-10 mx-auto opacity-40" />
               <p>Ask anything about this document</p>
               <p className="text-xs">e.g. "What are the main takeaways?" or "Explain the key concept"</p>
             </div>
           ) : (
-            <div className="space-y-3 py-2">
+            <div className="space-y-4">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && <Bot className="h-5 w-5 text-primary shrink-0 mt-1" />}
+                <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {msg.role === "assistant" && (
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm max-w-[85%] ${
+                    className={`rounded-xl text-sm max-w-[88%] ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground whitespace-pre-wrap"
-                        : "bg-secondary text-foreground prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                        ? "bg-primary text-primary-foreground px-4 py-2.5 whitespace-pre-wrap"
+                        : "bg-secondary/50 text-foreground px-4 py-3 border border-border/30"
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <div className="askdoc-markdown">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
                     ) : (
                       msg.content
                     )}
                   </div>
-                  {msg.role === "user" && <User className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />}
+                  {msg.role === "user" && (
+                    <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
               ))}
               {isLoading && (
-                <div className="flex gap-2 items-center">
-                  <Bot className="h-5 w-5 text-primary shrink-0" />
-                  <div className="bg-secondary rounded-lg px-3 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="flex gap-3 items-start">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Bot className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="bg-secondary/50 border border-border/30 rounded-xl px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce [animation-delay:0ms]" />
+                      <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce [animation-delay:150ms]" />
+                      <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce [animation-delay:300ms]" />
+                    </div>
                   </div>
                 </div>
               )}
@@ -131,7 +147,7 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
           )}
         </div>
 
-        <div className="flex gap-2 pt-2 border-t border-border">
+        <div className="flex gap-2 px-5 py-3 border-t border-border/50 bg-background">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
