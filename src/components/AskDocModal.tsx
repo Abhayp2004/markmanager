@@ -86,7 +86,7 @@ export function AskDocModal({ open, onOpenChange, bookmark }: AskDocModalProps) 
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/50">
           <DialogTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-5 w-5 text-primary" />
-            Ask about — <span className="text-muted-foreground font-normal truncate">{bookmark.author_name || domain}</span>
+            Ask about - <span className="text-muted-foreground font-normal truncate">{bookmark.author_name || domain}</span>
           </DialogTitle>
         </DialogHeader>
 
