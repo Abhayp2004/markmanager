@@ -46,11 +46,12 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY is not configured");
     }
 
-    // If we have a URL but limited content, try fetching more
-    let docContent = content || '';
-    if (url && docContent.length < 500) {
+    // Always try to fetch full article content from the source URL
+    let docContent = '';
+    if (url) {
       try {
-        const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(url)}&data.content.selector=article,main,.post-content,.entry-content,#content&data.content.type=text`;
+        console.log('Fetching full article from:', url);
+        const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(url)}&data.content.selector=article,main,.post-content,.entry-content,#content,body&data.content.type=text&data.content.attr=textContent`;
         const metaResponse = await fetch(microlinkUrl);
         if (metaResponse.ok) {
           const metaData = await metaResponse.json();
@@ -58,14 +59,22 @@ serve(async (req) => {
             const parts = [
               metaData.data.title && `Title: ${metaData.data.title}`,
               metaData.data.description && `Description: ${metaData.data.description}`,
-              metaData.data.content && `Content: ${metaData.data.content}`,
+              metaData.data.content && `Full Article Content:\n${metaData.data.content}`,
             ].filter(Boolean);
-            docContent = parts.join('\n\n');
+            const scraped = parts.join('\n\n');
+            if (scraped.length > 200) {
+              docContent = scraped;
+              console.log(`Fetched ${docContent.length} chars from source`);
+            }
           }
         }
       } catch (e) {
-        console.log('Microlink fetch failed:', e);
+        console.log('Microlink fetch failed, falling back to saved content:', e);
       }
+    }
+    // Fall back to saved content if scraping didn't yield enough
+    if (docContent.length < 200 && content) {
+      docContent = content;
     }
 
     const hasDocContent = docContent && docContent.trim().length > 0;
