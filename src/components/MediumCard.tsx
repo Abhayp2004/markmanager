@@ -244,7 +244,7 @@ export function MediumCard({
         <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
           {/* Medium branding header */}
           <div className="flex items-center gap-2">
-            <img src={mediumLogo} alt="Medium logo" className="h-5 w-auto dark:invert" />
+            <img src={mediumLogo} alt="Medium logo" className="h-6 w-auto dark:invert" style={{ clipPath: 'inset(25% 5% 25% 5%)' }} />
           </div>
 
           {/* Article title */}

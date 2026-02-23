@@ -48,7 +48,7 @@ const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-xl">𝕏</span>,
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
   reddit: <span className="text-xl">🔴</span>,
-  medium: <img src={mediumLogo} alt="Medium" className="h-5 w-auto dark:invert" />,
+  medium: <img src={mediumLogo} alt="Medium" className="h-6 w-auto dark:invert" style={{ clipPath: 'inset(25% 5% 25% 5%)' }} />,
   vault: <span className="text-xl">🌐</span>,
 };
 
