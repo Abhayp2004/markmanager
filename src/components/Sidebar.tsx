@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import mediumLogo from '@/assets/medium_logo.jpg';
+import mediumLogo from '@/assets/medium_logo.png';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-base">𝕏</span>,
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
   reddit: <span className="text-base">🔴</span>,
-  medium: <img src={mediumLogo} alt="Medium" className="h-5 w-auto dark:invert object-cover" style={{ objectPosition: 'left center', width: '20px', clipPath: 'inset(25% 5% 25% 5%)' }} />,
+  medium: <img src={mediumLogo} alt="Medium" className="h-4 w-auto dark:invert" />,
   vault: <span className="text-base">🌐</span>,
 };
 
