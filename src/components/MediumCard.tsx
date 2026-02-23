@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import mediumLogo from '@/assets/medium_logo.jpg';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TagBadge } from '@/components/TagBadge';
@@ -243,10 +244,7 @@ export function MediumCard({
         <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
           {/* Medium branding header */}
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background font-bold text-sm">
-              M
-            </div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Medium Article</span>
+            <img src={mediumLogo} alt="Medium" className="h-5 w-auto dark:invert" />
           </div>
 
           {/* Article title */}
