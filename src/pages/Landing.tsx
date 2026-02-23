@@ -531,7 +531,7 @@ export default function Landing() {
               Stop losing great content
             </h2>
             <p className="text-muted-foreground mb-6 relative z-10">
-              Join developers who save smarter, not harder.
+              Join people who save smarter, not harder.
             </p>
             <Link to="/auth">
               <motion.div
