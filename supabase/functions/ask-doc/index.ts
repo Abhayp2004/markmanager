@@ -49,10 +49,11 @@ serve(async (req) => {
     // Always try to fetch full article content from the source URL
     let docContent = '';
     if (url) {
+      // Method 1: Try Microlink API
       try {
         console.log('Fetching full article from:', url);
         const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(url)}&data.content.selector=article,main,.post-content,.entry-content,#content,body&data.content.type=text&data.content.attr=textContent`;
-        const metaResponse = await fetch(microlinkUrl);
+        const metaResponse = await fetch(microlinkUrl, { signal: AbortSignal.timeout(10000) });
         if (metaResponse.ok) {
           const metaData = await metaResponse.json();
           if (metaData.status === 'success' && metaData.data) {
@@ -64,21 +65,58 @@ serve(async (req) => {
             const scraped = parts.join('\n\n');
             if (scraped.length > 200) {
               docContent = scraped;
-              console.log(`Fetched ${docContent.length} chars from source`);
+              console.log(`Microlink fetched ${docContent.length} chars`);
             }
           }
         }
       } catch (e) {
-        console.log('Microlink fetch failed, falling back to saved content:', e);
+        console.log('Microlink fetch failed:', e);
+      }
+
+      // Method 2: Direct HTML fetch fallback if Microlink didn't work
+      if (docContent.length < 200) {
+        try {
+          console.log('Trying direct fetch for:', url);
+          const directResponse = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
+            signal: AbortSignal.timeout(10000),
+          });
+          if (directResponse.ok) {
+            const html = await directResponse.text();
+            // Strip HTML tags to get raw text
+            const textContent = html
+              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+              .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+              .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+              .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/&nbsp;/g, ' ')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'")
+              .replace(/\s+/g, ' ')
+              .trim();
+            if (textContent.length > 500) {
+              docContent = `Full Article Content:\n${textContent}`;
+              console.log(`Direct fetch got ${docContent.length} chars`);
+            }
+          }
+        } catch (e) {
+          console.log('Direct fetch also failed:', e);
+        }
       }
     }
     // Fall back to saved content if scraping didn't yield enough
     if (docContent.length < 200 && content) {
       docContent = content;
+      console.log(`Using saved content: ${docContent.length} chars`);
     }
 
     const hasDocContent = docContent && docContent.trim().length > 0;
-    const truncatedContent = hasDocContent ? docContent.substring(0, 30000) : '';
+    const truncatedContent = hasDocContent ? docContent.substring(0, 60000) : '';
 
     const systemPrompt = hasDocContent
       ? `You are a world-class research analyst and knowledgeable assistant. A user has saved a web article and may ask questions about it — or about anything else.
