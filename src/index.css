@@ -104,6 +104,44 @@
     background: var(--gradient-ocean);
   }
 
+  .animated-gradient-border {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+  }
+
+  .animated-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--gradient-angle, 0deg), hsl(187 72% 40%), hsl(192 85% 45%), hsl(172 66% 50%), hsl(187 72% 40%));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotate-gradient 4s linear infinite;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--foreground)) 35%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--foreground)) 65%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-slide 3s ease-in-out infinite;
+  }
+
+  .glow-pulse {
+    animation: glow-breathing 3s ease-in-out infinite;
+  }
+
   /* Subtle noise texture overlay */
   .noise-overlay::before {
     content: '';
@@ -164,6 +202,28 @@
   0% { background-position: 200% 0; }
   50% { background-position: 0% 0; }
   100% { background-position: 200% 0; }
+}
+
+@keyframes rotate-gradient {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+@keyframes shimmer-slide {
+  0% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-breathing {
+  0%, 100% { filter: drop-shadow(0 0 8px hsl(187 72% 40% / 0.4)); }
+  50% { filter: drop-shadow(0 0 20px hsl(187 72% 40% / 0.7)); }
+}
+
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
 }
 
 .animate-fade-in {
