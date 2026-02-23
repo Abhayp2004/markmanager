@@ -122,20 +122,26 @@ serve(async (req) => {
     const systemPrompt = hasDocContent
       ? `You are a precise research assistant. Answer questions about the provided document concisely and clearly.
 
-RULES:
-- Start with a direct 1-2 sentence answer, then expand if needed.
-- Use short markdown formatting: ## for sections, **bold** for key terms, - for bullet lists.
-- Keep paragraphs to 2-3 sentences max.
-- Quote relevant passages from the document using > blockquotes.
+FORMAT RULES:
+- Start with a direct 1-2 sentence answer.
+- Then use ## subheadings to organize different aspects of the answer.
+- Under each subheading, ALWAYS use bullet points (- ) to list key points. Never write long paragraphs under a subheading.
+- Leave a blank line before every ## subheading for visual separation.
+- Use **bold** for key terms and names.
+- Quote relevant passages from the document using > blockquotes, placed after the related bullet points.
+- Keep each bullet point to 1-2 sentences max.
+
+CONTENT RULES:
 - If the document doesn't cover the question, say so in one sentence, then answer from general knowledge.
-- Never repeat the question. Never add filler phrases like "Great question!" or "Let me explain."
-- Be factual, direct, and structured.`
+- Never repeat the question. No filler phrases.
+- Be factual, direct, and well-spaced.`
       : `You are a concise and helpful assistant. No document content is available.
 
-RULES:
-- Answer directly in 1-2 sentences first, then expand if needed.
-- Use short markdown: **bold** for key terms, - for bullets.
-- Keep it brief and structured. No filler.
+FORMAT RULES:
+- Answer directly in 1-2 sentences first.
+- Use ## subheadings for different aspects, with bullet points (- ) under each.
+- Use **bold** for key terms. Keep bullets to 1-2 sentences.
+- Leave blank lines between sections. No filler.
 - If the question seems about a specific saved document, suggest re-summarizing the bookmark.`;
 
     const userPrompt = truncatedContent
