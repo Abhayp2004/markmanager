@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import mediumLogo from '@/assets/medium_logo.png';
+import mediumIcon from '@/assets/medium_icon.jpg';
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { AnimatedCard } from "@/components/AnimatedCard";
@@ -48,7 +48,7 @@ const PLATFORM_HEADER_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-xl">𝕏</span>,
   youtube: <Play className="h-6 w-6 text-red-500" fill="currentColor" />,
   reddit: <span className="text-xl">🔴</span>,
-  medium: <img src={mediumLogo} alt="Medium" className="h-5 w-auto dark:invert" />,
+  medium: <img src={mediumIcon} alt="Medium" className="h-6 w-6 rounded object-cover" />,
   vault: <span className="text-xl">🌐</span>,
 };
 
