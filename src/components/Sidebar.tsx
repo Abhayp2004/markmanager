@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import mediumLogo from '@/assets/medium_logo.png';
+import mediumIcon from '@/assets/medium_icon.jpg';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ const PLATFORM_ICONS: Record<Platform, React.ReactNode> = {
   twitter: <span className="text-base">𝕏</span>,
   youtube: <Play className="h-4 w-4 text-red-500" fill="currentColor" />,
   reddit: <span className="text-base">🔴</span>,
-  medium: <svg className="h-4 w-4 dark:fill-current" viewBox="0 0 1043.63 592.71" xmlns="http://www.w3.org/2000/svg"><g><path d="M588.67 296.36c0 163.67-131.78 296.35-294.33 296.35S0 460 0 296.36 131.78 0 294.34 0s294.33 132.69 294.33 296.36M911.56 296.36c0 154.06-65.89 278.87-147.17 278.87s-147.17-124.81-147.17-278.87S683.11 17.49 764.39 17.49s147.17 124.8 147.17 278.87M1043.63 296.36c0 138-23.17 249.94-51.76 249.94s-51.75-111.91-51.75-249.94 23.17-249.94 51.75-249.94 51.76 111.9 51.76 249.94"/></g></svg>,
+  medium: <img src={mediumIcon} alt="Medium" className="h-5 w-5 rounded object-cover" style={{ objectPosition: 'center center' }} />,
   vault: <span className="text-base">🌐</span>,
 };
 
