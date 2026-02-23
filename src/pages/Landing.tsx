@@ -62,14 +62,14 @@ const FEATURES = [
   {
     icon: Zap,
     title: 'Multi‑platform capture',
-    desc: 'Save tweets, YouTube videos, Reddit threads, Medium articles, and any URL — all funneled into one unified inbox.',
+    desc: 'Save tweets, YouTube videos, Reddit threads, Medium articles, and any URL - all funneled into one unified inbox.',
     detail: 'No more scattered browser tabs. Paste a link and we auto‑detect the platform, pull metadata, thumbnails, and content.',
   },
   {
     icon: Sparkles,
     title: 'AI search & summaries',
     desc: 'Semantic search across everything you\'ve saved. Get instant summaries, topic grouping, and ask questions about any bookmark.',
-    detail: 'Powered by AI that understands context — search by meaning, not just keywords. "That article about React server components" just works.',
+    detail: 'Powered by AI that understands context - search by meaning, not just keywords. "That article about React server components" just works.',
   },
   {
     icon: FolderOpen,
@@ -540,7 +540,7 @@ export default function Landing() {
                 className="relative z-10 inline-block"
               >
                 <Button size="lg" className="gap-2 px-8 h-12 text-base">
-                  Sign up — it's free <ArrowRight className="h-4 w-4" />
+                  Sign up - it's free <ArrowRight className="h-4 w-4" />
                 </Button>
               </motion.div>
             </Link>

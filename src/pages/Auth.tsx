@@ -30,7 +30,7 @@ const FEATURES = [
   {
     icon: Zap,
     title: 'Multi-platform',
-    desc: 'X, YouTube, Reddit, Medium — all in one place.',
+    desc: 'X, YouTube, Reddit, Medium - all in one place.',
   },
   {
     icon: Sparkles,

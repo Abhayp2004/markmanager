@@ -145,7 +145,7 @@ export function BulkImportModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary" />
-            Internet Vault — Bulk Import
+            Internet Vault - Bulk Import
           </DialogTitle>
           <DialogDescription className="flex items-center gap-1">
             <Sparkles className="h-3 w-3 text-primary" />
