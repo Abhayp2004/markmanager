@@ -249,22 +249,30 @@
 .askdoc-markdown h3 {
   font-weight: 600;
   color: hsl(var(--foreground));
-  margin-top: 1em;
-  margin-bottom: 0.4em;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
   line-height: 1.3;
+  padding-left: 0.6em;
+  border-left: 3px solid hsl(var(--primary) / 0.4);
 }
 .askdoc-markdown h2 { font-size: 0.9375rem; }
 .askdoc-markdown h3 { font-size: 0.875rem; }
 .askdoc-markdown p {
-  margin: 0.4em 0;
+  margin: 0.6em 0;
+}
+.askdoc-markdown p + p,
+.askdoc-markdown ul + p,
+.askdoc-markdown ol + p,
+.askdoc-markdown blockquote + p {
+  margin-top: 0.9em;
 }
 .askdoc-markdown ul,
 .askdoc-markdown ol {
-  margin: 0.4em 0;
+  margin: 0.5em 0;
   padding-left: 1.25em;
 }
 .askdoc-markdown li {
-  margin: 0.2em 0;
+  margin: 0.35em 0;
 }
 .askdoc-markdown li::marker {
   color: hsl(var(--primary));
