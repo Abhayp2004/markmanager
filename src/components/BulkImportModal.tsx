@@ -82,10 +82,25 @@ export function BulkImportModal({
       );
 
       try {
-        // Fetch metadata + summary via edge function
-        const response = await supabase.functions.invoke("scrape-summarize", {
-          body: { url },
-        });
+        // Fetch metadata + summary via edge function with retry
+        let response;
+        let lastError;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            response = await supabase.functions.invoke("scrape-summarize", {
+              body: { url },
+            });
+            if (response.data && !response.data.error) break;
+            lastError = response.data?.error || "Unknown error";
+          } catch (e) {
+            lastError = e;
+            if (attempt < 1) await new Promise(r => setTimeout(r, 1500));
+          }
+        }
+
+        if (!response?.data || response.data.error) {
+          throw new Error(lastError || "Failed to fetch");
+        }
 
         const title = response.data?.title || "";
         const summary = response.data?.summary || "";
