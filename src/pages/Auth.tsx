@@ -88,31 +88,39 @@ export default function Auth() {
 
     setIsSubmitting(true);
 
-    const { error } = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    try {
+      const { error } = isLogin
+        ? await signIn(email, password)
+        : await signUp(email, password);
 
-    setIsSubmitting(false);
+      if (error) {
+        let message = error.message;
+        if (error.message.includes('User already registered')) {
+          message = 'This email is already registered. Try logging in instead.';
+        } else if (error.message.includes('Invalid login credentials')) {
+          message = 'Invalid email or password. Please try again.';
+        }
 
-    if (error) {
-      let message = error.message;
-      if (error.message.includes('User already registered')) {
-        message = 'This email is already registered. Try logging in instead.';
-      } else if (error.message.includes('Invalid login credentials')) {
-        message = 'Invalid email or password. Please try again.';
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        });
+      } else if (!isLogin) {
+        toast({
+          title: 'Account created!',
+          description: 'You can now log in with your credentials.',
+        });
+        setIsLogin(true);
       }
-
+    } catch (err) {
       toast({
-        title: 'Error',
-        description: message,
+        title: 'Network Error',
+        description: 'Could not connect to the server. Please check your internet connection and try again.',
         variant: 'destructive',
       });
-    } else if (!isLogin) {
-      toast({
-        title: 'Account created!',
-        description: 'You can now log in with your credentials.',
-      });
-      setIsLogin(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
