@@ -3,6 +3,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -218,15 +219,33 @@ export default function Auth() {
                 variant="outline"
                 className="w-full h-12 rounded-xl text-base font-medium gap-3 border-border/50 hover:bg-secondary/80 transition-all duration-200"
                 onClick={async () => {
-                  const { error } = await lovable.auth.signInWithOAuth("google", {
-                    redirect_uri: window.location.origin,
-                  });
-                  if (error) {
-                    toast({
-                      title: 'Error',
-                      description: error.message || 'Failed to sign in with Google',
-                      variant: 'destructive',
+                  const isCustomDomain =
+                    !window.location.hostname.includes('lovable.app') &&
+                    !window.location.hostname.includes('lovableproject.com');
+
+                  if (isCustomDomain) {
+                    // On custom domains, bypass the auth-bridge
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                      provider: 'google',
+                      options: {
+                        redirectTo: window.location.origin,
+                        skipBrowserRedirect: true,
+                      },
                     });
+                    if (error) {
+                      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                      return;
+                    }
+                    if (data?.url) {
+                      window.location.href = data.url;
+                    }
+                  } else {
+                    const { error } = await lovable.auth.signInWithOAuth('google', {
+                      redirect_uri: window.location.origin,
+                    });
+                    if (error) {
+                      toast({ title: 'Error', description: error.message || 'Failed to sign in with Google', variant: 'destructive' });
+                    }
                   }
                 }}
               >
