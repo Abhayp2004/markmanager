@@ -30,7 +30,11 @@ const authSchema = z.object({
     .refine((val) => val.endsWith('@gmail.com'), {
       message: 'Only Gmail addresses (example@gmail.com) are allowed',
     }),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain a special character'),
 });
 
 const FEATURES = [
@@ -272,6 +276,19 @@ export default function Auth() {
                     className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/30 rounded-xl transition-all duration-200"
                     required
                   />
+                  {!isLogin && password.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <p className={`text-xs flex items-center gap-1 ${password.length >= 6 ? 'text-green-500' : 'text-destructive'}`}>
+                        {password.length >= 6 ? '✓' : '✗'} At least 6 characters
+                      </p>
+                      <p className={`text-xs flex items-center gap-1 ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-destructive'}`}>
+                        {/[A-Z]/.test(password) ? '✓' : '✗'} One uppercase letter
+                      </p>
+                      <p className={`text-xs flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-500' : 'text-destructive'}`}>
+                        {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? '✓' : '✗'} One special character
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Button
