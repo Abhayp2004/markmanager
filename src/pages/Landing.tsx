@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import mediumIcon from '@/assets/medium_icon.jpg';
 import redditIcon from '@/assets/reddit_icon.png';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, lazy, Suspense } from 'react';
 import {
   Layers,
   ArrowRight,
@@ -22,9 +22,10 @@ import {
   Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { HeroScene } from '@/components/hero/HeroScene';
-import { FloatingCards3DScene } from '@/components/hero/FloatingCards3D';
 import { ParallaxSection } from '@/components/hero/ParallaxSection';
+
+const HeroScene = lazy(() => import('@/components/hero/HeroScene').then(m => ({ default: m.HeroScene })));
+const FloatingCards3DScene = lazy(() => import('@/components/hero/FloatingCards3D').then(m => ({ default: m.FloatingCards3DScene })));
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -111,7 +112,9 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: 'transparent' }}>
-      <HeroScene />
+      <Suspense fallback={null}>
+        <HeroScene />
+      </Suspense>
 
       {/* Ambient glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -158,7 +161,9 @@ export default function Landing() {
           className="relative px-6 pt-16 pb-20 lg:px-16 xl:px-24 max-w-5xl mx-auto text-center"
         >
           {/* Floating 3D cards behind hero text */}
-          <FloatingCards3DScene />
+          <Suspense fallback={null}>
+            <FloatingCards3DScene />
+          </Suspense>
 
           <motion.div
             initial="hidden"

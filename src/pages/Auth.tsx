@@ -17,7 +17,6 @@ import {
   Lock,
   Eye,
 } from 'lucide-react';
-import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
 import { GeometricBackground } from '@/components/GeometricBackground';
 
