@@ -48,6 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: redirectUrl
       }
     });
+
+    // Send welcome email via Resend (fire-and-forget)
+    if (!error) {
+      supabase.functions.invoke('send-email', {
+        body: { type: 'welcome', email },
+      }).catch(() => {
+        // Non-critical: don't block signup if email fails
+      });
+    }
+
     return { error };
   };
 
