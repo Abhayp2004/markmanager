@@ -134,8 +134,10 @@ export default function Auth() {
       } else if (!isLogin) {
         toast({
           title: 'Account created! 🎉',
-          description: 'You can now sign in with your credentials.',
+          description: 'Please sign in with your credentials.',
         });
+        setEmail('');
+        setPassword('');
         setIsLogin(true);
       }
     } catch (err) {
