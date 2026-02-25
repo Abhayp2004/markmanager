@@ -209,22 +209,11 @@ export default function Landing() {
             custom={3}
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Link to="/auth">
-              <motion.div
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Button size="lg" className="gap-2 text-base px-8 h-12 relative overflow-hidden group">
-                  <span className="relative z-10">Start saving for free</span>
-                  <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
-                  <motion.div
-                    className="absolute inset-0 bg-accent/20"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </Button>
-              </motion.div>
+            <Link to="/auth" onClick={(e) => e.stopPropagation()}>
+              <Button size="lg" className="gap-2 text-base px-8 h-12 relative overflow-hidden group hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-transform">
+                <span className="relative z-10">Start saving for free</span>
+                <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+              </Button>
             </Link>
           </motion.div>
 
