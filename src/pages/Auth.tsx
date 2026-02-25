@@ -118,6 +118,8 @@ export default function Auth() {
           message = 'This email is already registered. Try logging in instead.';
         } else if (error.message.includes('Invalid login credentials')) {
           message = 'Invalid email or password. Please try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          message = 'Please verify your email before signing in. Check your inbox.';
         }
 
         toast({
@@ -127,8 +129,8 @@ export default function Auth() {
         });
       } else if (!isLogin) {
         toast({
-          title: 'Account created!',
-          description: 'You can now log in with your credentials.',
+          title: 'Check your email! 📧',
+          description: 'We sent a verification link to your Gmail. Please verify to sign in.',
         });
         setIsLogin(true);
       }
