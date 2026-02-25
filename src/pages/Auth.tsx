@@ -22,7 +22,14 @@ import { GeometricBackground } from '@/components/GeometricBackground';
 
 
 const authSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Please enter a valid email address')
+    .refine((val) => val.endsWith('@gmail.com'), {
+      message: 'Only Gmail addresses (example@gmail.com) are allowed',
+    }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -242,7 +249,7 @@ export default function Auth() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="you@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="h-12 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/30 rounded-xl transition-all duration-200"
