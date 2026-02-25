@@ -21,7 +21,19 @@ import { z } from 'zod';
 import { GeometricBackground } from '@/components/GeometricBackground';
 
 
-const authSchema = z.object({
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Please enter a valid email address')
+    .refine((val) => val.endsWith('@gmail.com'), {
+      message: 'Only Gmail addresses (example@gmail.com) are allowed',
+    }),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+const signupSchema = z.object({
   email: z
     .string()
     .trim()
@@ -87,7 +99,8 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validation = authSchema.safeParse({ email, password });
+    const schema = isLogin ? loginSchema : signupSchema;
+    const validation = schema.safeParse({ email, password });
     if (!validation.success) {
       toast({
         title: 'Validation Error',
