@@ -129,8 +129,8 @@ export default function Auth() {
         });
       } else if (!isLogin) {
         toast({
-          title: 'Check your email! 📧',
-          description: 'We sent a verification link to your Gmail. Please verify to sign in.',
+          title: 'Account created! 🎉',
+          description: 'You can now sign in with your credentials.',
         });
         setIsLogin(true);
       }
