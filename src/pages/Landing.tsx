@@ -561,7 +561,10 @@ export default function Landing() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="max-w-md mx-auto mt-6 text-center glass-card rounded-xl p-6 flex flex-col items-center gap-3"
           >
-            <p className="text-sm font-medium text-foreground">Help me support the cause ❤️</p>
+            <p className="text-sm font-medium text-foreground">Help power MarkManager's AI ⚡</p>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+              MarkManager uses AI to summarize, tag & search your bookmarks. Your support helps me afford cloud GPU costs to keep these features free for everyone.
+            </p>
             <motion.a
               href="https://buymeacoffee.com/abhxy03"
               target="_blank"
@@ -569,7 +572,7 @@ export default function Landing() {
               className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
               whileHover={{ scale: 1.05 }}
             >
-              ☕ Buy me a coffee <ExternalLink className="h-3.5 w-3.5" />
+              🚀 Support AI costs <ExternalLink className="h-3.5 w-3.5" />
             </motion.a>
           </motion.div>
         </section>
