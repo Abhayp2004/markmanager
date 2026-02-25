@@ -88,10 +88,22 @@ export default function Auth() {
 
     setIsSubmitting(true);
 
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsSubmitting(false);
+      toast({
+        title: 'Request Timeout',
+        description: 'The server took too long to respond. Please try again.',
+        variant: 'destructive',
+      });
+    }, 15000);
+
     try {
       const { error } = isLogin
         ? await signIn(email, password)
         : await signUp(email, password);
+
+      clearTimeout(timeoutId);
 
       if (error) {
         let message = error.message;
@@ -114,12 +126,14 @@ export default function Auth() {
         setIsLogin(true);
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       toast({
         title: 'Network Error',
         description: 'Could not connect to the server. Please check your internet connection and try again.',
         variant: 'destructive',
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
