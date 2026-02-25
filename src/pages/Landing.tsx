@@ -202,20 +202,6 @@ export default function Landing() {
             Stop losing great content across platforms. Save anything, find everything, understand it instantly.
           </motion.p>
 
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            custom={3}
-            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
-          >
-            <Link to="/auth" onClick={(e) => e.stopPropagation()}>
-              <Button size="lg" className="gap-2 text-base px-8 h-12 relative overflow-hidden group hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-transform">
-                <span className="relative z-10">Start saving for free</span>
-                <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          </motion.div>
 
           {/* Platform badges with stagger */}
           <motion.div
