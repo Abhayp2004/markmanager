@@ -49,13 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Send welcome email via Resend (fire-and-forget)
     if (!error) {
+      // Sign out immediately so user must manually sign in
+      await supabase.auth.signOut({ scope: 'local' });
+
+      // Send welcome email via Resend (fire-and-forget)
       supabase.functions.invoke('send-email', {
         body: { type: 'welcome', email },
-      }).catch(() => {
-        // Non-critical: don't block signup if email fails
-      });
+      }).catch(() => {});
     }
 
     return { error };
