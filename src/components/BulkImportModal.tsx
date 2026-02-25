@@ -234,32 +234,43 @@ export function BulkImportModal({
 
           {/* Buttons */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="h-10 w-full"
-              disabled={isImporting}
-            >
-              {importStatuses.some((s) => s.status === "success") ? "Done" : "Cancel"}
-            </Button>
-            <Button
-              onClick={handleImport}
-              className="h-10 w-full gap-2"
-              disabled={isImporting || urls.length === 0}
-            >
-              {isImporting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <Globe className="h-4 w-4" />
-                  Import {urls.length > 0 ? `${urls.length} URL${urls.length !== 1 ? "s" : ""}` : "URLs"}
-                </>
-              )}
-            </Button>
+            {importStatuses.some((s) => s.status === "success" || s.status === "error") && !isImporting ? (
+              <Button
+                onClick={handleClose}
+                className="h-10 w-full"
+              >
+                Done
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  className="h-10 w-full"
+                  disabled={isImporting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleImport}
+                  className="h-10 w-full gap-2"
+                  disabled={isImporting || urls.length === 0}
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="h-4 w-4" />
+                      Import {urls.length > 0 ? `${urls.length} URL${urls.length !== 1 ? "s" : ""}` : "URLs"}
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
