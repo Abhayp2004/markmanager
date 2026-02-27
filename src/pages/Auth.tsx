@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { z } from 'zod';
 import { GeometricBackground } from '@/components/GeometricBackground';
+import { ForgotPasswordModal } from '@/components/ForgotPasswordModal';
 
 
 const loginSchema = z.object({
@@ -80,6 +81,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   if (loading) {
     return (
@@ -322,7 +324,16 @@ export default function Auth() {
                 </Button>
               </form>
 
-              <div className="mt-5 text-center">
+              <div className="mt-5 text-center space-y-2">
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgot(true)}
+                    className="text-sm text-primary/80 hover:text-primary transition-colors duration-200 block mx-auto"
+                  >
+                    Forgot password?
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsLogin(!isLogin)}
@@ -333,6 +344,8 @@ export default function Auth() {
                     : 'Already have an account? Sign in'}
                 </button>
               </div>
+
+              <ForgotPasswordModal open={showForgot} onClose={() => setShowForgot(false)} />
 
             </div>
 
