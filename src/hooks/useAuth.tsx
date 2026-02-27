@@ -51,9 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error) {
       // Sign out immediately so user must manually sign in
-      await supabase.auth.signOut({ scope: 'local' });
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // Ignore signout errors — account was still created
+      }
 
-      // Send welcome email via Resend (fire-and-forget)
+      // Send welcome email via edge function (fire-and-forget)
       supabase.functions.invoke('send-email', {
         body: { type: 'welcome', email },
       }).catch(() => {});
