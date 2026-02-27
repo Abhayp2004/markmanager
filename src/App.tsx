@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 
 import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 class ErrorBoundary extends Component<
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/~oauth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
