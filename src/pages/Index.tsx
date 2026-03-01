@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Dashboard } from '@/components/Dashboard';
 import { Loader2 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import Landing from '@/pages/Landing';
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -15,7 +15,7 @@ export default function Index() {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Landing />;
   }
 
   return <Dashboard />;
