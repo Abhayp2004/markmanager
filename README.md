@@ -7,7 +7,7 @@ MarkManager is a multi-platform bookmark manager that lets you collect and organ
 - Automatic platform detection with rich previews (tweets, thumbnails, metadata)
 - Organize with folders, tags, and priority pins
 - Fast search and filtering across saved content
-- AI-assisted summaries, highlights, and auto-tagging for supported content
+- AI-assisted summaries, highlights, and auto-tagging for tweets, articles, and videos
 - Bulk import multiple URLs at once
 - Secure authentication and database-backed storage with Supabase
 
