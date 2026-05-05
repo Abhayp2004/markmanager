@@ -1,20 +1,21 @@
-# X Bookmark Organizer
+# MarkManager
 
-A web application to organize X (Twitter) bookmarks using folders and tags — features not available on X natively.
+MarkManager is a multi-platform bookmark manager that lets you collect and organize links from X (Twitter), Reddit, Medium, YouTube, and any other site in one searchable inbox.
 
 ## 🚀 Features
-- Save X bookmarks
-- Organize with folders and tags
-- Fast search and filtering
-- Secure authentication
-- Database-backed storage
-- Built-in tweet preview
+- Multi-platform capture for X/Twitter, Reddit, Medium, YouTube, and any URL
+- Automatic platform detection with rich previews (tweets, thumbnails, metadata)
+- Organize with folders, tags, and priority pins
+- Fast search and filtering across saved content
+- AI-assisted summaries, highlights, and auto-tagging for supported content
+- Bulk import multiple URLs at once
+- Secure authentication and database-backed storage with Supabase
 
 ## 🛠 Tech Stack
 - React + Vite
 - TypeScript
 - Tailwind CSS
-- Supabase (Auth + Database)
+- Supabase (Auth + Database + Edge Functions)
 - Vercel (Deployment)
 
 ## 🧑‍💻 Local Development
